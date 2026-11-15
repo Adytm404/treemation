@@ -8,5 +8,16 @@
   },
   "homepage": "https://github.com/Adytm404/treemation",
   "repository": "https://github.com/Adytm404/treemation",
-  "keywords": ["video", "animation", "3d", "tiktok", "reels", "shorts", "elevenlabs", "education", "indonesia"]
+  "keywords": [
+    "video",
+    "animation",
+    "3d",
+    "tiktok",
+    "reels",
+    "shorts",
+    "elevenlabs",
+    "education",
+    "indonesia"
+  ],
+  "license": "MIT"
 }

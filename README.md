@@ -155,3 +155,7 @@ skills/treemation/
 - Scripts, captions, and replies are in **Bahasa Indonesia**.
 - Characters are original designs. The skill avoids copying characters, skins, or mascots from other creators, games, or brands.
 - Educational content should be accurate: the skill writes example numbers from documentation ranges or clearly labeled data, and CTAs only state what you provide.
+
+## License
+
+[MIT](LICENSE) © 2026 Adytm404
