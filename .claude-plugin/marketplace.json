@@ -1,0 +1,21 @@
+{
+  "name": "treemation",
+  "owner": {
+    "name": "Adytm404",
+    "url": "https://github.com/Adytm404"
+  },
+  "metadata": {
+    "description": "Treemation: 3D educational video generator skill for Claude Code",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "treemation",
+      "source": "./",
+      "description": "Turn a topic into a narrated 9:16 3D educational video (TikTok/Reels/Shorts) with script, pixel-skin host, lip sync, captions, thumbnail, and MP4 render.",
+      "version": "1.0.0",
+      "category": "productivity",
+      "keywords": ["video", "animation", "3d", "tiktok", "elevenlabs"]
+    }
+  ]
+}

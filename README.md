@@ -39,6 +39,32 @@ All clips below were rendered by this skill (no video editor, no stock footage).
 
 ## Install
 
+### Claude Code (plugin)
+
+Run this inside Claude Code (version 2.1.275 or later):
+
+```
+/plugin install treemation --marketplace Adytm404/treemation
+```
+
+Or in two steps, which also works on older versions:
+
+```
+/plugin marketplace add Adytm404/treemation
+/plugin install treemation@treemation
+```
+
+From a terminal instead:
+
+```bash
+claude plugin marketplace add Adytm404/treemation
+claude plugin install treemation@treemation
+```
+
+Update later with `/plugin marketplace update treemation`.
+
+### Any agent (skills.sh)
+
 ```bash
 npx skills add Adytm404/treemation --skill treemation
 ```

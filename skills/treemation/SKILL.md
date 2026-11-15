@@ -1,178 +1,191 @@
 ---
 name: treemation
-description: Buat video edukasi pendek 3D vertikal (9:16, Shorts/Reels/TikTok) sepenuhnya dengan code — host karakter pixel-skin + maskot, kamera dinamis, latar adaptif, caption kuning, lip sync, efek suara, thumbnail — berbahasa Indonesia, disinkronkan ke narasi MP3 ElevenLabs. Alur 2 langkah otomatis. Permintaan topik ("buat konten edukasi apa itu domain", "bikin video tentang inflasi", "konten tiktok soal cara kerja email") langsung dijawab dengan naskah ElevenLabs + rencana scene, TANPA menjelaskan topiknya di chat. File MP3 yang dikirim sesudahnya langsung diproses jadi video MP4 + thumbnail tanpa bertanya lagi. Gunakan skill ini setiap kali pengguna minta konten/video edukasi, konten TikTok/Reels/Shorts, naskah voice over/ElevenLabs, menyebut "apa itu …"/"jelaskan …" dalam konteks membuat konten, atau mengirim MP3 narasi — walaupun tidak menyebut "3D", "video", atau "skill".
+description: Create short vertical 3D educational videos (9:16, Shorts/Reels/TikTok) entirely in code — pixel-skin host character + mascot, dynamic camera, adaptive backgrounds, yellow keyword captions, lip sync, sound effects, thumbnail — in Bahasa Indonesia, synced to an ElevenLabs MP3 narration. Automatic 2-step flow. A topic request ("buat konten edukasi apa itu domain", "bikin video tentang inflasi", "konten tiktok soal cara kerja email") is answered directly with an ElevenLabs script + scene plan, WITHOUT explaining the topic in chat. An MP3 sent afterwards is processed straight into an MP4 video + thumbnail without further questions. Use this skill whenever the user asks for educational content/videos, TikTok/Reels/Shorts content, a voice-over/ElevenLabs script, says "apa itu …"/"jelaskan …" in the context of making content, or sends a narration MP3 — even if they don't say "3D", "video", or "skill".
 ---
 
-# Video Edukasi 3D
+# Treemation — 3D Educational Videos
 
-Skill ini menghasilkan video seperti contoh di `examples/zenhosta/` ("Kok website bisa online?"):
-host bergaya pixel-skin (karakter blok ala game sandbox, wajah anime berpiksel) yang disesuaikan
-dengan konteks pengguna, maskot "Byte", kamera yang berganti shot (close-up wajah, close-up
-maskot, fokus ke ilustrasi 3D, wide, low angle), latar yang berganti tema sesuai topik, label langkah di atas
-dengan garis progres, panggung 3D melayang untuk props, panel UI yang muncul tepat saat kata
-diucapkan, caption besar (kuning untuk kata kunci), dan mulut host bergerak mengikuti suara.
+This skill produces videos like the example in `examples/zenhosta/` ("Kok website bisa online?"):
+a pixel-skin host (blocky sandbox-game style character with a pixelated anime face) adapted to the
+user's context, the mascot "Byte", a camera that switches shots (face close-up, mascot close-up,
+3D illustration focus, wide, low angle), backgrounds whose theme follows the topic, a step label at
+the top with a progress bar, a floating 3D stage for props, UI panels that appear exactly when a
+word is spoken, big captions (keywords in yellow), and a host whose mouth follows the voice.
 
-Semua komunikasi dengan pengguna dalam **bahasa Indonesia**.
+All communication with the user is in **Bahasa Indonesia** (scripts, captions, and chat replies).
 
-## Aturan pemicu (baca dulu — supaya cukup satu kalimat dari pengguna)
+## Trigger rules (read first — so one sentence from the user is enough)
 
-**A. Pengguna menyebut topik** — contoh: "buat konten edukasi apa itu domain", "bikin video soal
+**A. The user names a topic** — e.g. "buat konten edukasi apa itu domain", "bikin video soal
 cara kerja email, CTA ke tokoku.id", "konten tiktok: kenapa harga emas naik".
 
-- Itu permintaan **membuat konten**, bukan pertanyaan. **Jangan menjelaskan topiknya di chat**,
-  jangan memberi ringkasan materi, jangan bertanya balik ("mau durasi berapa?", "target
+- That is a request to **make content**, not a question. **Do not explain the topic in chat**,
+  do not summarize the material, and do not ask back ("mau durasi berapa?", "target
   penontonnya siapa?", "pakai CTA?").
-- Langsung kerjakan **Tahap 1** dengan default di bawah, lalu balas dengan format Tahap 1
-  (`references/output-format.md`): naskah siap tempel ElevenLabs, karakter, thumbnail, tabel scene,
-  path `video-plan.json`. Penutupnya satu kalimat: "Kirim MP3 dari ElevenLabs, nanti langsung aku
-  jadikan video."
-- Default kalau tidak disebut: durasi ±60–70 dtk (120–150 kata), 2–4 langkah sesuai topik,
-  karakter dari `karakter.md` (konteks pengguna → niche → preset `raka`), CTA penutup
-  "Follow buat konten edukasi lainnya!" (tanpa merek). Kalau pengguna menyebut merek/URL, CTA
-  memakai itu. Semua default bisa diubah setelahnya — sebut singkat di balasan, jangan tanya dulu.
-- Kalau topik butuh fakta yang mungkin berubah (harga, aturan, data terbaru) dan kamu punya akses
-  web, cek dulu; kalau tidak, tulis naskah yang tidak bergantung pada angka terkini.
+- Go straight to **Stage 1** with the defaults below, then reply in the Stage 1 format
+  (`references/output-format.md`): ready-to-paste ElevenLabs script, character, thumbnail, scene
+  table, path to `video-plan.json`. Close with one sentence: "Kirim MP3 dari ElevenLabs, nanti
+  langsung aku jadikan video."
+- Defaults when not specified: duration ±60–70 s (120–150 words), 2–4 steps depending on the
+  topic, character from `karakter.md` (user context → niche → preset `raka`), closing CTA
+  "Follow buat konten edukasi lainnya!" (no brand). If the user names a brand/URL, the CTA uses it.
+  Every default can be changed afterwards — mention them briefly in the reply, don't ask first.
+- If the topic depends on facts that may change (prices, regulations, recent data) and you have
+  web access, check first; otherwise write a script that doesn't rely on current figures.
 
-**B. Pengguna mengirim MP3** (dengan atau tanpa pesan) — langsung kerjakan **Tahap 2 sampai
-selesai** tanpa minta konfirmasi: cari proyeknya, alignment, `scenes.js`, cek stills, render,
-thumbnail, encode, cek hasil, lalu balas dengan format Tahap 2.
+**B. The user sends an MP3** (with or without a message) — run **Stage 2 to completion** without
+asking for confirmation: find the project, align, write `scenes.js`, check stills, render,
+thumbnail, encode, check the result, then reply in the Stage 2 format.
 
-- Mencari proyek: `python <skill>/scripts/find_project.py` menampilkan proyek beserta statusnya.
-  Pakai proyek yang `plan.json`-nya sudah ada tapi belum punya audio (paling baru). Nama file MP3
-  atau pesan pengguna yang menyebut topik mengalahkan urutan waktu. Tanya satu pertanyaan singkat
-  hanya kalau ada beberapa kandidat yang sama-sama masuk akal.
-- Tidak ada proyek sama sekali → minta pengguna menempelkan teks yang dibacakan di ElevenLabs
-  (alignment butuh teks yang sama persis), lalu susun `plan.json` di sekitar teks itu tanpa
-  mengubah kata-katanya, dan lanjut Tahap 2.
-- Durasi audio jauh dari perkiraan (> 25 %) atau `align.py` menandai banyak frasa `<-- cek` →
-  kemungkinan teks diubah di ElevenLabs. Minta teks yang dipakai, perbarui narasi di plan, ulangi.
-- Satu-satunya alasan berhenti di tengah: dependensi belum terpasang (minta izin sekali untuk
-  memasang) atau error yang tidak bisa diperbaiki sendiri.
-- Render penuh bisa lama; jalankan di latar belakang, kerjakan thumbnail sambil menunggu, dan
-  beri kabar progres singkat bila sesi mendukung.
+- Finding the project: `python <skill>/scripts/find_project.py` lists projects and their status.
+  Use the project whose `plan.json` exists but has no audio yet (most recent). The MP3 file name
+  or a user message naming the topic beats chronological order. Ask one short question only when
+  several candidates are equally plausible.
+- No project at all → ask the user to paste the text read in ElevenLabs (alignment needs the
+  exact text), then build `plan.json` around that text without changing its words, and continue
+  with Stage 2.
+- Audio duration far from the estimate (> 25 %) or `align.py` flags many phrases with `<-- cek` →
+  the text was probably edited in ElevenLabs. Ask for the text used, update the narration in the
+  plan, and repeat.
+- The only reasons to stop midway: a missing dependency (ask permission once to install it) or an
+  error you cannot fix yourself.
+- A full render can take a while; run it in the background, make the thumbnail while waiting,
+  and post short progress updates when the session supports it.
 
-**C. Pengguna minta revisi** ("ganti karakternya jadi cewek berhijab", "judul thumbnail lebih
-singkat", "warna merek biru") → ubah `plan.json`/`scenes.js` di proyek yang sama. Sebelum ada MP3:
-kirim ulang bagian Tahap 1 yang berubah saja. Kalau narasi berubah, ingatkan bahwa MP3 harus
-dibuat ulang. Setelah video jadi: render ulang yang perlu (thumbnail saja, atau video penuh).
+**C. The user asks for a revision** ("ganti karakternya jadi cewek berhijab", "judul thumbnail
+lebih singkat", "warna merek biru") → change `plan.json`/`scenes.js` in the same project. Before
+an MP3 exists: resend only the parts of the Stage 1 reply that changed. If the narration changes,
+remind the user that the MP3 must be regenerated. After the video is done: re-render only what is
+needed (thumbnail only, or the full video).
 
-Format balasan di chat untuk kedua tahap ada di `references/output-format.md` — ikuti persis.
+The chat reply format for both stages is in `references/output-format.md` — follow it exactly.
 
-## Folder proyek
+## Project folder
 
-Satu video = satu folder `video-<topik-singkat>/` (huruf kecil, tanda hubung, mis.
-`video-apa-itu-domain`) di direktori kerja. Buat di Tahap 1 dan siapkan sekali:
+One video = one folder `video-<short-topic>/` (lowercase, hyphens, e.g. `video-apa-itu-domain`)
+in the working directory. Create it in Stage 1 and set it up once:
 
 ```bash
-python <skill>/scripts/setup_project.py video-<topik>
+python <skill>/scripts/setup_project.py video-<topic>
 ```
 
-Ini menyalin engine (`index.html`, `engine.js`), memasang three.js + font + ikon lewat npm,
-membuat `icons.js`, dan memeriksa ffmpeg/numpy/playwright. Kalau ada baris `PERLU:`, pasang dulu
-yang disebutkan (minta izin pengguna sebelum menginstal apa pun di sistemnya).
+This copies the engine (`index.html`, `engine.js`, `pixelchar.js`), installs three.js + fonts +
+icons via npm, creates `icons.js`, and checks ffmpeg/numpy/playwright. If a line starts with
+`PERLU:`, install what it names first (ask the user's permission before installing anything on
+their system).
 
-Isi folder setelah selesai: `plan.json` (kamu tulis), `scenes.js` (kamu tulis), `narasi.mp3`,
+Folder contents when done: `plan.json` (you write it), `scenes.js` (you write it), `narasi.mp3`,
 `naskah-elevenlabs.txt`, `video-plan.json`, `timeline.js/json`, `frames/`, `previews/`, `video.mp4`.
 
-## Tahap 1 — konsep → naskah + rencana scene
+## Stage 1 — concept → script + scene plan
 
-1. Baca `references/naskah-dan-plan.md` (cara menulis naskah, skema `plan.json`, daftar pose,
-   ekspresi, aksi maskot, efek suara).
-2. Tentukan karakter host dari konteks pengguna (baca `references/karakter.md`) dan tulis di
-   `characters` plan.json. Jalankan `python <skill>/scripts/preview_characters.py <proyek> --plan`
-   dan lihat hasilnya; sertakan gambar `previews/karakter.png` di balasan bila bisa.
-3. Baca `references/hook.md`. Tulis 3 versi hook (jenis berbeda), pilih yang terkuat untuk kalimat
-   pertama narasi + `hook` di plan.json (teks besar layar, alternatif). Scene 1 harus memenuhi aturan
-   tiga lapis: shot kuat di `@start`, efek suara di kata pertama, tanpa sapaan/intro.
-4. Tulis `plan.json`: 6–9 scene dengan pola hook → pengantar (jumlah poin) → langkah 1..n → rangkuman → CTA,
-   plus `thumbnail` (judul cover, props yang dipamerkan, ekspresi host) — lihat bagian "Thumbnail".
-   Rencanakan `shots` dan `background` tiap scene sekalian (bagian "Shot kamera" dan "Latar adaptif").
-   Targetkan 120–150 kata total (≈ 60–70 detik di ElevenLabs).
-5. Jalankan `python <skill>/scripts/plan_timing.py <proyek>` → membuat `video-plan.json` (timing
-   perkiraan) dan `naskah-elevenlabs.txt`. Periksa keluarannya: semua kata pemicu harus ketemu dan
-   **"Cek hook: OK"** — perbaiki setiap peringatan ⚠ lalu jalankan ulang.
-6. Balas pengguna dengan format Tahap 1 di `references/output-format.md`: blok naskah siap tempel,
-   catatan pengucapan, tabel scene + menit, dan path `video-plan.json`. Minta MP3-nya.
+1. Read `references/naskah-dan-plan.md` (how to write the script, the `plan.json` schema, the
+   list of poses, expressions, mascot actions, and sound effects).
+2. Choose the host character from the user's context (read `references/karakter.md`) and write it
+   to `characters` in plan.json. Run `python <skill>/scripts/preview_characters.py <project> --plan`
+   and look at the result; include `previews/karakter.png` in the reply when possible.
+3. Read `references/hook.md`. Write 3 hook versions (different types), and pick the strongest for
+   the first narration sentence + `hook` in plan.json (big on-screen text, alternatives). Scene 1
+   must satisfy the three-layer rule: a strong shot at `@start`, a sound effect on the first word,
+   no greeting/intro.
+4. Write `plan.json`: 6–9 scenes following hook → intro (number of points) → steps 1..n → recap →
+   CTA, plus `thumbnail` (cover title, props to show, host expression) — see the "Thumbnail"
+   section. Plan each scene's `shots` and `background` at the same time (sections "Shot kamera"
+   and "Latar adaptif"). Aim for 120–150 words total (≈ 60–70 seconds in ElevenLabs).
+5. Run `python <skill>/scripts/plan_timing.py <project>` → creates `video-plan.json` (estimated
+   timing) and `naskah-elevenlabs.txt`. Check the output: every trigger word must be found and it
+   must print **"Cek hook: OK"** — fix every ⚠ warning and run it again.
+6. Reply to the user in the Stage 1 format from `references/output-format.md`: ready-to-paste
+   script block, pronunciation notes, scene table with minutes, and the `video-plan.json` path.
+   Ask for the MP3.
 
-## Tahap 2 — MP3 → video
+## Stage 2 — MP3 → video
 
-1. Simpan audio sebagai `<proyek>/narasi.mp3`.
-2. Pastikan narasi di `plan.json` **sama persis** dengan yang dibacakan (pengguna mungkin mengubah
-   naskah di ElevenLabs — tanyakan kalau ragu, atau dengarkan durasinya: selisih besar dari
-   perkiraan adalah tanda teksnya beda).
-3. `python <skill>/scripts/align.py <proyek>` → `timeline.js`, `timeline.json`, `video-plan.json`
-   tersinkron. Lihat daftar frasa: baris bertanda `<-- cek` artinya durasinya janggal; biasanya
-   karena teks beda dengan audio atau ElevenLabs berhenti di tempat tak terduga. Perbaiki teks di
-   plan bila perlu dan jalankan ulang.
-4. Baca `references/engine-api.md`, lalu tulis `<proyek>/scenes.js`. Mulai dengan menyalin pola dari
-   `examples/zenhosta/scenes.js`. Semua waktu memakai `T(sceneId, 'kata')`, jangan angka detik
-   mentah — supaya tetap sinkron kalau audio diganti.
-5. **Cek visual sebelum render penuh**:
-   `python <skill>/scripts/render.py <proyek> --stills <3–4 detik per scene>`
-   lalu **lihat** gambar di `<proyek>/previews/`. Ambil minimal satu still per shot. Periksa: panel tidak menutupi wajah host,
-   tidak ada yang terpotong di tepi, caption terbaca, props muncul di panggung, tidak ada error
-   halaman. Perbaiki dan ulangi sampai rapi. Ini langkah paling penting untuk kualitas.
-   Untuk mengecek gerakan (karakter minggir, transisi latar, cut kamera), render klip pendek
-   bersuara: `python <skill>/scripts/render.py <proyek> --clip 10 18` → `previews/clip_10-18.mp4`.
-6. Render penuh: `python <skill>/scripts/render.py <proyek>` (bisa dilanjut kalau terputus;
-   `--workers N` untuk CPU banyak core). Kira-kira 0,3–0,6 detik per frame per worker.
-   Jalankan di latar belakang dan pantau progresnya kalau lama.
-7. Thumbnail: `python <skill>/scripts/thumbnail.py <proyek>` → `<proyek>/thumbnail.png` (cover
-   1080×1920) dan `previews/thumbnail-cek.png` (garis area aman). **Lihat** cek-nya: judul dan
-   wajah host di dalam kotak merah, judul tidak menutupi wajah, props terlihat. Atur `props_from`,
-   `stage`, atau `title_y` lalu ulangi. Bisa dikerjakan sambil render penuh berjalan.
-8. `python <skill>/scripts/encode.py <proyek> <nama>.mp4` → efek suara dibuat otomatis, dimix
-   pelan di bawah narasi, lalu MP4 1080×1920 30fps H.264 + AAC. Opsi: `--no-sfx`, `--music file.mp3`.
-9. Cek beberapa frame dari MP4 akhir (ffmpeg `-ss <detik> -frames:v 1`), lalu balas dengan
-   format Tahap 2 di `references/output-format.md`.
+1. Save the audio as `<project>/narasi.mp3`.
+2. Make sure the narration in `plan.json` is **exactly** what was read (the user may have edited
+   the script in ElevenLabs — ask if unsure, or check the duration: a big gap from the estimate
+   means the text differs).
+3. `python <skill>/scripts/align.py <project>` → synced `timeline.js`, `timeline.json`,
+   `video-plan.json`. Look at the phrase list: lines marked `<-- cek` have suspicious durations,
+   usually because the text differs from the audio or ElevenLabs paused somewhere unexpected.
+   Fix the text in the plan if needed and run it again.
+4. Read `references/engine-api.md`, then write `<project>/scenes.js`. Start by copying the
+   patterns in `examples/zenhosta/scenes.js`. All times use `T(sceneId, 'word')`, never raw
+   seconds — so everything stays in sync if the audio is replaced.
+5. **Visual check before the full render**:
+   `python <skill>/scripts/render.py <project> --stills <3–4 seconds per scene>`
+   then **look** at the images in `<project>/previews/`. Take at least one still per shot. Check:
+   panels don't cover the host's face, nothing is cut off at the edges, captions are readable,
+   props appear on the stage, no page errors. Fix and repeat until clean. This is the most
+   important step for quality.
+   To check motion (characters stepping aside, background transitions, camera cuts), render a
+   short clip with sound: `python <skill>/scripts/render.py <project> --clip 10 18` →
+   `previews/clip_10-18.mp4`.
+6. Full render: `python <skill>/scripts/render.py <project>` (resumable if interrupted;
+   `--workers N` for many-core CPUs). Roughly 0.3–0.6 s per frame per worker.
+   Run it in the background and monitor progress if it takes long.
+7. Thumbnail: `python <skill>/scripts/thumbnail.py <project>` → `<project>/thumbnail.png`
+   (1080×1920 cover) and `previews/thumbnail-cek.png` (safe-area guides). **Look** at the check
+   image: title and host face inside the red box, title not covering the face, props visible.
+   Adjust `props_from`, `stage`, or `title_y` and repeat. Can be done while the full render runs.
+8. `python <skill>/scripts/encode.py <project> <name>.mp4` → sound effects are generated
+   automatically, mixed quietly under the narration, then encoded to a 1080×1920 30 fps
+   H.264 + AAC MP4. Options: `--no-sfx`, `--music file.mp3`.
+9. Check a few frames of the final MP4 (ffmpeg `-ss <seconds> -frames:v 1`), then reply in the
+   Stage 2 format from `references/output-format.md`.
 
-## Prinsip
+## Principles
 
-- **Sinkron dulu, cantik kemudian.** Setiap visual muncul pada kata yang menjelaskannya. Sebuah
-  panel yang muncul sebelum kata diucapkan terasa salah.
-- **Hook dulu, baru materi.** 3 detik pertama menentukan apakah video ditonton: kalimat hook ≤ 14
-  kata tanpa sapaan, teks besar di layar yang tidak menyalin narasi, karakter/props bergerak sejak
-  frame pertama, dan janjinya mulai dijawab sebelum detik 8 (`references/hook.md`).
-- **Kamera hidup, bukan statis.** Setiap scene minimal 2 shot (`host_close`, `host_medium`,
-  `mascot_close`, `illustration`, `wide`, `low_angle`) dengan cut atau move di kata yang tepat —
-  close-up untuk hook/punchline/CTA, `illustration` saat props dibahas (karakter otomatis minggir
-  dulu, lalu kembali), `mascot_close` untuk reaksi.
-  Panel UI harus berada di zona aman shot yang sedang aktif.
-- **Latar ikut topik.** Tiap scene (atau kata penting) punya `background`: tema warna, pola
-  partikel, dan ikon motif yang sesuai isi — dingin pakai salju biru es, server pakai kode biner,
-  CTA pakai warna hangat/merek. Latar statis satu warna sepanjang video terasa membosankan.
-- **Mulut mengikuti vokal.** Lip sync memakai 4 bentuk mulut A, I, E, O (u = O) sesuai urutan vokal
-  tiap kata — "aku mau makan" → A O A O A A — dan tertutup saat jeda. Kata asing dibaca sesuai
-  ucapannya lewat `pronunciation` (`references/karakter.md`).
-- **Satu ide per momen.** Area atas (y 230–900 px) memuat satu hal utama sekaligus: panel UI
-  *atau* prop 3D besar. Bersihkan elemen scene sebelumnya.
-- **Karakter sesuai konteks, tetap orisinal.** Host pixel-skin dibangun dari spec (preset + gaya
-  rambut, baju, warna, aksesori, hijab) yang dipilih dari deskripsi pengguna, merek, dan niche.
-  Jangan meniru skin/karakter milik kreator lain, karakter game, atau maskot merek — dari gambar
-  referensi ambil gayanya saja.
-- **Fakta benar.** Naskah edukasi harus akurat; angka contoh pakai rentang dokumentasi (mis. IP
-  `203.0.113.x`) atau label yang jelas. Jangan mengarang statistik.
-- **CTA jujur.** Sebut merek/URL dari pengguna apa adanya, tanpa klaim yang tidak dia berikan
-  (harga, promo, "terbaik", tenggat palsu).
-- **Jangan berkedip lebih dari 3× per detik** (aman untuk penonton fotosensitif).
-- Kalau sesuatu tidak bisa dibuat (mis. gaya yang butuh model 3D kompleks), katakan dan tawarkan
-  versi voxel terdekat.
+- **Sync first, pretty second.** Every visual appears on the word that explains it. A panel that
+  appears before its word is spoken feels wrong.
+- **Hook before content.** The first 3 seconds decide whether the video gets watched: hook
+  sentence ≤ 14 words with no greeting, big on-screen text that doesn't copy the narration,
+  characters/props moving from the first frame, and the promise starts being answered before
+  second 8 (`references/hook.md`).
+- **A living camera, not a static one.** Every scene has at least 2 shots (`host_close`,
+  `host_medium`, `mascot_close`, `illustration`, `wide`, `low_angle`) with a cut or move on the
+  right word — close-ups for hook/punchline/CTA, `illustration` while props are discussed (the
+  characters automatically step aside, then return), `mascot_close` for reactions.
+  UI panels must stay inside the active shot's safe zone.
+- **Backgrounds follow the topic.** Each scene (or key word) has a `background`: color theme,
+  particle pattern, and motif icons that match the content — cold uses icy blue + snow, servers
+  use binary code, the CTA uses warm/brand colors. A static single-color background for the whole
+  video feels boring.
+- **The mouth follows vowels.** Lip sync uses 4 mouth shapes A, I, E, O (u = O) following each
+  word's vowel order — "aku mau makan" → A O A O A A — and closes on pauses. Foreign words are
+  read by their pronunciation via `pronunciation` (`references/karakter.md`).
+- **One idea per moment.** The top area (y 230–900 px) holds one main thing at a time: a UI panel
+  *or* a large 3D prop. Clear the previous scene's elements.
+- **Context-fitting yet original characters.** The pixel-skin host is built from a spec (preset +
+  hair style, outfit, colors, accessories, hijab) chosen from the user's description, brand, and
+  niche. Don't copy skins/characters from other creators, game characters, or brand mascots —
+  from reference images, take the style only.
+- **Accurate facts.** Educational scripts must be correct; example numbers use documentation
+  ranges (e.g. IP `203.0.113.x`) or clear labels. Never invent statistics.
+- **Honest CTA.** State the user's brand/URL as given, without claims they didn't provide
+  (prices, promos, "the best", fake deadlines).
+- **Never flash more than 3× per second** (safe for photosensitive viewers).
+- If something can't be built (e.g. a style that needs complex 3D models), say so and offer the
+  closest voxel version.
 
-## File di skill ini
+## Files in this skill
 
-- `scripts/setup_project.py` — siapkan proyek.
-- `scripts/find_project.py` — daftar proyek video + status (menunggu MP3 / siap render / selesai).
-- `scripts/plan_timing.py` — Tahap 1: timing perkiraan + teks ElevenLabs.
-- `scripts/align.py` — Tahap 2: sinkron ke audio (ffmpeg + numpy, tanpa model AI).
-- `scripts/render.py` — preview stills / render semua frame (Playwright Chromium).
-- `scripts/encode.py` — efek suara, mix, MP4.
-- `scripts/thumbnail.py` — cover TikTok/Reels + gambar cek area aman.
-- `scripts/preview_characters.py` — gambar semua preset karakter, atau host dari plan.json (badan + close-up).
-- `scripts/plan_lib.py` — dipakai skrip lain.
-- `assets/engine/` — `index.html`, `engine.js`, `pixelchar.js` (jangan diedit per video; ubah lewat `plan.json`/`scenes.js`).
-- `references/karakter.md` — gaya pixel-skin, preset, field spec, cara memilih dari konteks.
-- `references/hook.md` — riset hook TikTok: tiga lapis, 10 jenis hook + contoh, struktur 0–8 dtk, larangan.
-- `examples/zenhosta/` — `plan.json` + `scenes.js` lengkap untuk satu video 69 detik.
-- `references/naskah-dan-plan.md` — menulis naskah dan `plan.json`.
-- `references/engine-api.md` — API untuk `scenes.js`, tata letak, komponen, props.
-- `references/output-format.md` — format balasan chat Tahap 1 dan Tahap 2.
+- `scripts/setup_project.py` — set up a project.
+- `scripts/find_project.py` — list video projects + status (waiting for MP3 / ready to render / done).
+- `scripts/plan_timing.py` — Stage 1: estimated timing + ElevenLabs text.
+- `scripts/align.py` — Stage 2: sync to the audio (ffmpeg + numpy, no AI model).
+- `scripts/render.py` — preview stills / render all frames (Playwright Chromium).
+- `scripts/encode.py` — sound effects, mix, MP4.
+- `scripts/thumbnail.py` — TikTok/Reels cover + safe-area check image.
+- `scripts/preview_characters.py` — render all character presets, or the host from plan.json (full body + close-up).
+- `scripts/plan_lib.py` — shared by the other scripts.
+- `assets/engine/` — `index.html`, `engine.js`, `pixelchar.js` (don't edit per video; change things through `plan.json`/`scenes.js`).
+- `references/karakter.md` — pixel-skin style, presets, spec fields, choosing from context.
+- `references/hook.md` — TikTok hook research: three layers, 10 hook types + examples, 0–8 s structure, don'ts.
+- `examples/zenhosta/` — complete `plan.json` + `scenes.js` for one 69-second video.
+- `references/naskah-dan-plan.md` — writing the script and `plan.json`.
+- `references/engine-api.md` — API for `scenes.js`, layout, components, props.
+- `references/output-format.md` — chat reply format for Stage 1 and Stage 2.
+
+The reference files are written in Bahasa Indonesia; "Tahap 1" and "Tahap 2" in them mean
+Stage 1 and Stage 2.
