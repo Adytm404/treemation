@@ -39,7 +39,7 @@ def make_sfx(tl, path):
            "rise_hum": lambda: tone(90, 180, .7, .6, .35) + noise(.7, 200, 1200, .15),
            "multiply_swell": lambda: noise(.9, 300, 3000, .45) + tone(220, 440, .9, .8, .15),
            "scratch": lambda: noise(.25, 800, 3000, .45, False), "tick": lambda: tone(1500, 1500, .06, .02, .4),
-           "boing": lambda: tone(200, 600, .35, .15, .5), "coin": lambda: tone(988, 988, .08, .05, .4) + np.pad(tone(1318, 1318, .5, .15, .4), (int(SR * .08), 0))[:int(SR * .5)]}
+           "boing": lambda: tone(200, 600, .35, .15, .5), "coin": lambda: (lambda a, b: np.pad(a, (0, len(b) - len(a))) + b)(tone(988, 988, .08, .05, .4), np.pad(tone(1318, 1318, .5, .15, .4), (int(SR * .08), 0))[:int(SR * .5)])}
 
     def add(x, t):
         o = int(max(0, t) * SR); x = x[:len(out) - o]; out[o:o + len(x)] += x
