@@ -1,6 +1,6 @@
 # treemation
 
-[![skills.sh](https://skills.sh/b/Adytm404/treemation)](https://skills.sh/Adytm404/treemation)
+📦 [View on skills.sh](https://skills.sh/Adytm404/treemation/treemation)
 
 **Bikin video edukasi 3D vertikal (TikTok / Reels / Shorts) sepenuhnya dengan code — dari satu kalimat topik sampai MP4 + thumbnail.**
 
