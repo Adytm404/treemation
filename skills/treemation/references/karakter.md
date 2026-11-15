@@ -68,6 +68,13 @@ Tulis di `plan.json`:
 
 Maskot (`mascot.spec`): `body`, `face`, `trim`, `legs`, `leds` (bool), `pixel` (default ikut host).
 
+## Rig & gerak
+
+Lengan host: bahu → siku → pergelangan (pose lebih luwes, lihat daftar pose di
+`naskah-dan-plan.md`). Rambut panjang, kuncir, twintails, dan telinga kucing berayun sedikit
+terlambat dari kepala/badan (gerak ikutan). Setiap pergantian pose memakai antisipasi + overshoot
+dan squash kecil. Karakter dan props diberi garis tepi kartun otomatis.
+
 ## Lip sync vokal (A · I · U · E · O)
 
 Mulut host hanya membaca **vokal** dari kata yang sedang diucapkan dan berganti bentuk mengikuti

@@ -19,8 +19,9 @@ Contoh lengkap yang bekerja: `examples/zenhosta/scenes.js`. Mulai dari menyalinn
 ## 1. Kerangka
 
 ```js
-import { register, T, S, hookEnd, env, setPop, P, clamp, lerp, inOut, easeOut, backOut,
-         M, box, grp, stage, PROPS, FXP, UI, ANIM, SHOTS, THEMES, screenOf, css, el, icon, textBoard } from './engine.js';
+import { register, T, S, hookEnd, loopStart, env, setPop, P, clamp, lerp, inOut, easeOut, backOut,
+         M, box, grp, stage, PROPS, FXP, UI, ANIM, SHOTS, THEMES, SCREENS, smartphone, outline, glow,
+         screenOf, css, el, icon, textBoard, THREE } from './engine.js';
 
 let P3 = {}, U = {};
 register({
@@ -166,6 +167,46 @@ Lampu kedip pakai `Math.sin(t * 2.6 + i) > -.3` (lambat, aman).
 - Karakter diatur di `plan.json` → `characters.host.spec` (lihat `karakter.md`). `look.host` di
   `register` menimpa spec itu (mis. `{ top: '#0f4cdb' }`). `host.style: 'classic'` memakai host
   voxel polos lama. `look.mascot`: `body, face, trim, legs, leds, pixel`.
+
+## 6a. Aksen otomatis & efek baru
+
+Sudah otomatis tanpa kode di `scenes.js`:
+- **Caption karaoke**: kata yang sedang diucapkan menyala kuning dan memantul kecil; caption kata
+  kunci seluruhnya kuning.
+- **Zoom punch** di caption kata kunci + `punch` dari plan; **guncangan** dari `shake` & efek suara keras.
+- **Anggukan host** di kata yang ditekankan (puncak volume + kata kunci, dihitung `align.py` →
+  `TL.emphasis`), kepala turun sedikit lalu kembali.
+- **Mata melirik** ke kanan layar (ke panel/props) ±1 dtk setelah pose `point_panel`, `point_up`,
+  `present`, `spread`, `hold`, lalu kembali menatap kamera.
+
+Dipanggil dari `scenes.js`:
+- `ANIM.countUp(elm, t, t0, dur, to, {from, decimals, prefix, suffix})` — angka berjalan di `.v`
+  (mis. `UI.bignum`). Pasangkan dengan sfx `count`.
+- `PROPS.bars(stage, {values:[.3,.6,1], colors})` + `FXP.growBars(bars, t, t0)` — grafik batang 3D tumbuh.
+- `FXP.coinRain(n)` + `FXP.updateCoinRain(list, t, t0)` — hujan koin 3D (±2,4 dtk).
+- `sparkles: () => [[t0, xPx, yPx]]` di `register` — percikan kilau di posisi layar (mis. saat angka
+  selesai menghitung).
+
+### Props tambahan, diorama, dan HP bergerak
+
+- `PROPS.store`, `bank`, `moneybag`, `megaphone`, `atmCard`, `eye`, `rocket` (`{g, flame}`), `trophy`,
+  `calendar` (`{text}`), `cart` — semua `(stage, {x, z, scale, ...})`, voxel dengan warna bisa diatur.
+- `PROPS.diorama(stage, 'shops' | 'office' | 'city')` — set kecil yang mengisi panggung
+  (deretan toko, meja kantor, gedung kota).
+- `smartphone(stage, {x, z, scale})` → `{g, screen, show(t, template, opsi, tap)}`. Panggil `show` tiap
+  frame di `update3D`. Template (`SCREENS`): `home {badge, sub}`, `feed {t0, speed, ads, adLabel}`
+  (bergulir), `chat {title, msgs:[{t, me, name, text, paid, free}]}` (pesan muncul di waktunya,
+  titik "mengetik" 0,8 dtk sebelumnya), `notif {items:[{t, title, text, color}]}` (banner meluncur),
+  `status {}`. `tap = {t, x, y}` (0..1) menggambar jari + riak tekan. Tanpa logo merek asli.
+
+### Otomatis dari engine
+
+- Garis tepi kartun pada host, maskot, dan semua props di panggung; halo glow pada benda menyala
+  (`render_style` di plan untuk mematikan).
+- Latar (bokeh, pola, motif) blur saat kamera dekat (close-up).
+- Garis kecepatan pada efek suara `whoosh*`; debu kecil saat karakter mendarat (masuk dari
+  atas/bawah, maskot `jump`).
+- `loop_end`: kamera & latar kembali ke frame pertama di `loopStart()`.
 
 ## 6b. Latar adaptif
 

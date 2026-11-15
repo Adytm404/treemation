@@ -17,7 +17,13 @@ const R = 2;                    // tekstur per px kulit
 export const P = 0.24;          // unit dunia per px kulit (tinggi total ±32px ≈ 7.7 unit)
 
 function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-function hex2rgb(h) { h = h.replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); const n = parseInt(h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+// menerima '#rrggbb', '#rgb', atau 'rgb(r,g,b)' (hasil shade()) — warna yang tak terbaca jadi abu-abu, bukan hitam
+function hex2rgb(h) {
+  const m = /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i.exec(h || '');
+  if (m) return [+m[1], +m[2], +m[3]].map(v => Math.round(v));
+  h = String(h || '').replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  const n = parseInt(h, 16); return isNaN(n) || h.length !== 6 ? [128, 128, 128] : [n >> 16 & 255, n >> 8 & 255, n & 255];
+}
 function shade(h, k) { const [r, g, b] = hex2rgb(h); const f = v => Math.max(0, Math.min(255, Math.round(k >= 0 ? v + (255 - v) * k : v * (1 + k)))); return `rgb(${f(r)},${f(g)},${f(b)})`; }
 
 export function buildPixelHost(THREE, parent, spec, opts = {}) {
@@ -51,22 +57,24 @@ export function buildPixelHost(THREE, parent, spec, opts = {}) {
   // ---------- wajah (16×16) per kombinasi mata/mulut ----------
   const faceCache = {};
   const ink = '#1a1420', lash = hijab ? '#2a1d24' : shade(S.hair, -.55);
-  function drawEyes(x, state) {
+  function drawEyes(x, state, gaze = '') {
     const eyes = [[2, 1], [10, -1]];            // kolom kiri mata, arah (untuk highlight/sayap)
     for (const [c0, dir] of eyes) {
       const outer = dir > 0 ? c0 : c0 + 3, inner = dir > 0 ? c0 + 3 : c0;
+      // lirikan: R = ke kanan layar (bagian putih di kiri), L = ke kiri layar
+      const scl = gaze === 'R' ? c0 : gaze === 'L' ? c0 + 3 : outer;
       if (state === 'closed') { for (let i = 0; i < 4; i++) px(x, c0 + i, 10, lash); continue; }
       if (state === 'happy') { px(x, outer, 10, lash); px(x, c0 + 1, 9, lash); px(x, c0 + 2, 9, lash); px(x, inner, 10, lash); continue; }
       const top = state === 'wide' ? 8 : 9, bot = state === 'wide' ? 12 : 11;
       const lashRow = state === 'half' ? 9 : top - 1;
       for (let Y = top; Y <= bot; Y++) for (let i = 0; i < 4; i++) {
-        const c = c0 + i; const sclera = c === outer;
+        const c = c0 + i; const sclera = c === scl;
         let col = sclera ? '#ffffff' : (Y === top ? shade(S.eyes, -.3) : Y === bot ? shade(S.eyes, .4) : shade(S.eyes, .1));
         if (state === 'wide' && (Y === top || Y === bot) && !sclera) col = '#ffffff';
         if (state === 'half' && Y <= 9) continue;
         px(x, c, Y, col);
       }
-      const hlX = dir > 0 ? c0 + 2 : c0 + 1; px(x, hlX, top + (state === 'wide' ? 1 : 0), '#ffffff');
+      const hlX = gaze === 'R' ? c0 + 2 : gaze === 'L' ? c0 + 1 : (dir > 0 ? c0 + 2 : c0 + 1); px(x, hlX, top + (state === 'wide' ? 1 : 0), '#ffffff');
       for (let i = 0; i < 4; i++) px(x, c0 + i, lashRow, lash);
       if (female) { px(x, dir > 0 ? c0 - 1 : c0 + 4, lashRow, lash); px(x, dir > 0 ? c0 - 1 : c0 + 4, lashRow - 1, lash); }
       if (state === 'worried') { px(x, inner, lashRow - 2, lash); px(x, inner + (dir > 0 ? -1 : 1), lashRow - 1, lash); }
@@ -87,14 +95,14 @@ export function buildPixelHost(THREE, parent, spec, opts = {}) {
     else if (m === 'vU') { row(13, [[7, d], [8, d]]); row(14, [[6, sd], [7, red], [8, red], [9, sd]]); }                                                                         // U: kecil monyong
     else if (m === 'vO') { row(13, [[7, d], [8, d]]); row(14, [[6, d], [7, red], [8, red], [9, d]]); row(15, [[7, d], [8, d]]); }                                                     // O: bulat lebih besar
   }
-  function faceTex(eyes, mouth) {
-    const key = eyes + '|' + mouth; if (faceCache[key]) return faceCache[key];
+  function faceTex(eyes, mouth, gaze = '') {
+    const key = eyes + '|' + mouth + '|' + gaze; if (faceCache[key]) return faceCache[key];
     const [c, x] = canvas(16, 16);
     noiseFill(x, 16, 16, S.skin, .04);
     for (let X = 0; X < 16; X++) { const len = (X <= 0 || X >= 15) ? sideLen : F(X); hairFill(x, 16, 16, S.hair, 0, Math.min(16, len), (cx) => cx === X); if (!hijab) px(x, X, Math.min(15, len), shade(S.hair, -.35)); }
     if (S.blush) { for (const cc of [[2, 12], [3, 12], [12, 12], [13, 12]]) px(x, cc[0], cc[1], 'rgba(240,120,140,.55)'); }
     if (S.accessories.includes('beard')) { for (let Y = 12; Y < 16; Y++) for (let X = 2; X < 14; X++) if (!(Y >= 13 && X >= 5 && X <= 10)) px(x, X, Y, shade(S.hair, (rnd() - .5) * .2)); }
-    drawEyes(x, eyes); drawMouth(x, mouth);
+    drawEyes(x, eyes, gaze); drawMouth(x, mouth);
     if (S.accessories.includes('glasses')) { const g = '#111827'; for (const c0 of [1, 9]) { for (let i = 0; i < 6; i++) { px(x, c0 + i, 7, g); px(x, c0 + i, 12, g); } for (let Y = 7; Y <= 12; Y++) { px(x, c0, Y, g); px(x, c0 + 5, Y, g); } } px(x, 7, 9, g); px(x, 8, 9, g); }
     return (faceCache[key] = tex(c));
   }
@@ -121,18 +129,24 @@ export function buildPixelHost(THREE, parent, spec, opts = {}) {
   const [ec] = canvas(4, 4); const empty = tex(ec);
   const hairShell = boxMesh(8 * L, 8 * L, 8 * L, [mat(outerSide(true), true), mat(outerSide(false), true), mat(hairOnly(16, 16)), mat(empty, true), mat(outerFront, true), mat(outerBack, true)]);
   hairShell.position.y = 4 * P + .2 * P; head.add(hairShell);
-  const hairBox = (w, h, d, x, y, z, rot = 0) => { const m = boxMesh(w, h, d, mat(hairOnly(Math.max(2, Math.round(w * R)), Math.max(2, Math.round(h * R))))); m.position.set(x * P, y * P, z * P); m.rotation.x = rot; head.add(m); return m; };
+  const sway = [];   // potongan rambut/aksesori yang ikut berayun (gerak ikutan)
+  const hairBox = (w, h, d, x, y, z, rot = 0, swing = 0) => {
+    const m = boxMesh(w, h, d, mat(hairOnly(Math.max(2, Math.round(w * R)), Math.max(2, Math.round(h * R)))));
+    if (!swing) { m.position.set(x * P, y * P, z * P); m.rotation.x = rot; head.add(m); return m; }
+    const g = new THREE.Group(); g.position.set(x * P, (y + h / 2) * P, z * P); g.rotation.x = rot; head.add(g);   // poros di ujung atas
+    m.position.y = -h / 2 * P; g.add(m); sway.push({ g, k: swing, base: rot, ph: sway.length * 1.3 }); return m;
+  };
   if (S.hairStyle === 'messy') { [[-2.5, 2], [0.5, 2.5], [3, 1.8], [-0.8, 1.6]].forEach(([x, h], i) => hairBox(2.2, h, 3, x, 8.6 + h / 2, -1 + i * .8)); }
-  if (S.hairStyle === 'long') { hairBox(9, 13, 1.6, 0, -2.5, -4.6); for (const sx of [-1, 1]) hairBox(1.6, 9, 2.2, sx * 4.3, -1.5, 2.6); }
+  if (S.hairStyle === 'long') { hairBox(9, 13, 1.6, 0, -2.5, -4.6, 0, .6); for (const sx of [-1, 1]) hairBox(1.6, 9, 2.2, sx * 4.3, -1.5, 2.6, 0, 1); }
   if (S.hairStyle === 'bob') { hairBox(9.4, 6, 1.4, 0, 3, -4.6); for (const sx of [-1, 1]) hairBox(1.4, 6, 7, sx * 4.6, 3, -.8); }
-  if (S.hairStyle === 'ponytail') { hairBox(3, 3, 3, 0, 5.5, -5); const t = hairBox(2.6, 8, 2.6, 0, 0.5, -6.2, .25); }
-  if (S.hairStyle === 'twintails') { for (const sx of [-1, 1]) { hairBox(2.6, 2.6, 2.6, sx * 5, 6.5, -1.5); hairBox(2.4, 10, 2.4, sx * 5.6, 0.5, -1.8); } }
+  if (S.hairStyle === 'ponytail') { hairBox(3, 3, 3, 0, 5.5, -5); hairBox(2.6, 8, 2.6, 0, 0.5, -6.2, .25, 1.4); }
+  if (S.hairStyle === 'twintails') { for (const sx of [-1, 1]) { hairBox(2.6, 2.6, 2.6, sx * 5, 6.5, -1.5); hairBox(2.4, 10, 2.4, sx * 5.6, 0.5, -1.8, 0, 1.3); } }
   if (S.hairStyle === 'bun') { hairBox(4, 3.5, 4, 0, 9.5, -2.5); }
   if (hijab) { hairBox(9.4, 3.2, 9.4, 0, -1.5, -.2); hairBox(8, 3.5, 1.2, 0, -2.6, 4.2); hairBox(9.6, 6, 1.4, 0, -2.2, -4.7); }
   // aksesori kepala
   const acc = S.accessories;
   const cube = (w, h, d, col, x, y, z, basic = false) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w * P, h * P, d * P), basic ? new THREE.MeshBasicMaterial({ color: col }) : new THREE.MeshLambertMaterial({ map: solidTex(Math.ceil(w), Math.ceil(h), col, .08) })); m.position.set(x * P, y * P, z * P); m.castShadow = true; head.add(m); return m; };
-  if (acc.includes('cat_ears')) for (const sx of [-1, 1]) { const e = cube(2.6, 2.6, 1.2, S.hair, sx * 2.8, 9.8, -.5); e.rotation.z = -sx * .2; cube(1.4, 1.5, .3, S.earColor || '#f9a8d4', sx * 2.75, 9.6, .2); }
+  if (acc.includes('cat_ears')) for (const sx of [-1, 1]) { const eg = new THREE.Group(); eg.position.set(sx * 2.8 * P, 8.6 * P, -.5 * P); head.add(eg); const e = cube(2.6, 2.6, 1.2, S.hair, 0, 1.2, 0); e.rotation.z = -sx * .2; head.remove(e); eg.add(e); const inner = cube(1.4, 1.5, .3, S.earColor || '#f9a8d4', -sx * .05, 1.0, .7); head.remove(inner); eg.add(inner); sway.push({ g: eg, k: .5, base: 0, ph: sx, axis: 'z' }); }
   if (acc.includes('flower_crown')) { const cols = ['#f472b6', '#facc15', '#ffffff', '#60a5fa', '#a78bfa']; let i = 0; for (const [x, z] of [[-4, 4], [-2, 4.5], [0, 4.6], [2, 4.5], [4, 4], [4.6, 2], [4.6, 0], [4.6, -2], [4, -4], [-4.6, 2], [-4.6, 0], [-4.6, -2], [-4, -4], [0, -4.6], [2, -4.5], [-2, -4.5]]) { cube(1, 1, 1, i % 2 ? '#22c55e' : cols[(i >> 1) % cols.length], x, 8.9, z); i++; } }
   if (acc.includes('headphones')) { cube(9.4, 1, 1.4, '#1f2937', 0, 9.3, 0); for (const sx of [-1, 1]) { cube(1.2, 4, 1.2, '#1f2937', sx * 4.7, 7.3, 0); cube(1.6, 3, 3, S.accent || '#f43f5e', sx * 4.9, 4.6, .3); } }
   if (acc.includes('cap')) { cube(8.8, 2.4, 8.8, S.capColor || S.accent, 0, 9.2, 0); cube(8, .7, 4, S.capColor || S.accent, 0, 8.3, 5.5); }
@@ -175,12 +189,19 @@ export function buildPixelHost(THREE, parent, spec, opts = {}) {
     for (let Y = 20; Y < 24; Y++) for (let X = 0; X < w * R; X++) px(x, X, Y, shade(S.skin, -.08 + (rnd() - .5) * .06));
     return tex(c);
   }
-  const arms = {};
+  const arms = {}, elbows = {}, wrists = {};
+  const slice = (srcTex, w, y0, h) => { const [c, x] = canvas(w, h); x.drawImage(srcTex.image, 0, y0, w, h, 0, 0, w, h); return tex(c); };
   for (const sx of [-1, 1]) {
-    const g = new THREE.Group(); g.position.set(sx * (4 + aw / 2) * P, 11 * P, 0); body.add(g);
-    const t = armTex(aw), endTop = solidTex(aw, 4, top), endBot = solidTex(aw, 4, S.skin);
-    const m = boxMesh(aw, 12, 4, [mat(t), mat(t), mat(endTop), mat(endBot), mat(t), mat(t)]); m.position.y = -5 * P; g.add(m);
-    arms[sx < 0 ? 'L' : 'R'] = g;
+    const g = new THREE.Group(); g.position.set(sx * (4 + aw / 2) * P, 11 * P, 0); body.add(g);       // bahu
+    const full = armTex(aw), W = aw * R;
+    const up = slice(full, W, 0, 12), fo = slice(full, W, 12, 8), ha = slice(full, W, 20, 4);
+    const sideU = solidTex(aw, 4, top), cuffCol = sleeveLen > 12 ? top : S.skin;
+    const mU = boxMesh(aw, 6, 4, [mat(up), mat(up), mat(sideU), mat(solidTex(aw, 4, top)), mat(up), mat(up)]); mU.position.y = -2 * P; g.add(mU);
+    const e = new THREE.Group(); e.position.y = -5 * P; g.add(e);                                        // siku
+    const mF = boxMesh(aw * .98, 4, 3.98, [mat(fo), mat(fo), mat(solidTex(aw, 4, cuffCol)), mat(solidTex(aw, 4, S.skin)), mat(fo), mat(fo)]); mF.position.y = -2 * P; e.add(mF);
+    const w = new THREE.Group(); w.position.y = -4 * P; e.add(w);                                         // pergelangan
+    const mH = boxMesh(aw * 1.02, 2, 4.02, [mat(ha), mat(ha), mat(solidTex(aw, 4, S.skin)), mat(solidTex(aw, 4, shade(S.skin, -.1))), mat(ha), mat(ha)]); mH.position.y = -1 * P; w.add(mH);
+    const k = sx < 0 ? 'L' : 'R'; arms[k] = g; elbows[k] = e; wrists[k] = w;
   }
 
   // ---------- kaki ----------
@@ -214,8 +235,8 @@ export function buildPixelHost(THREE, parent, spec, opts = {}) {
   head.position.y = neckY; body.add(head);
 
   // ---------- antarmuka untuk engine ----------
-  const host = { root, body, head, arms, legs, bodyY: 12 * P, spec: S, style: 'pixel' };
-  host.face = ({ expr, open, blink, pose, viseme }) => {
+  const host = { root, body, head, arms, elbows, wrists, legs, sway, bodyY: 12 * P, spec: S, style: 'pixel' };
+  host.face = ({ expr, open, blink, pose, viseme, gaze }) => {
     let eyes = { wow: 'wide', worried: 'worried', smirk: 'half', joy: 'happy' }[expr] || 'open';
     if (pose === 'celebrate' && expr === 'happy') eyes = 'happy';
     if (blink) eyes = 'closed';
@@ -223,7 +244,7 @@ export function buildPixelHost(THREE, parent, spec, opts = {}) {
     let mouth = viseme !== undefined && viseme !== null
       ? (viseme === '-' ? rest : 'v' + viseme)                                  // lip sync vokal A/I/E/O
       : (open > .55 ? 'open2' : open > .2 ? 'open1' : rest);                    // cadangan: dari volume
-    faceMat.map = faceTex(eyes, mouth);
+    faceMat.map = faceTex(eyes, mouth, eyes === 'closed' || eyes === 'happy' ? '' : (gaze || ''));
   };
   return host;
 }

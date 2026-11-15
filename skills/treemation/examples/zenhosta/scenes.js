@@ -1,5 +1,5 @@
 // Contoh lengkap: "Kok Website Bisa Online?" (zenhosta.com)
-import { register, T, S, hookEnd, env, setPop, P, clamp, lerp, inOut, easeOut, backOut, M, stage, PROPS, FXP, UI, ANIM, screenOf, css } from './engine.js';
+import { register, T, S, hookEnd, loopStart, env, setPop, P, clamp, lerp, inOut, easeOut, backOut, M, stage, PROPS, FXP, UI, ANIM, screenOf, css } from './engine.js';
 
 const s1 = S.s1_hook, s2 = S.s2_intro, s3 = S.s3_domain, s4 = S.s4_server, s5 = S.s5_datacenter, s6 = S.s6_hosting, s7 = S.s7_recap, s8 = S.s8_cta;
 let P3 = {}, U = {};
@@ -39,7 +39,7 @@ register({
   },
   // kapan panggung 3D terlihat
   stageWindows: () => [[T('s1_hook', 'dari') - .25, s1.end + .05], [T('s3_domain', 'alamat') - .3, T('s3_domain', 'Tanpa') + .2], [s4.start + .15, s6.end + .05]],
-  confetti: () => [[T('s6_hosting', 'online'), 540, 640, s6.end], [T('s8_cta', 'sekarang'), 540, 700, 999]],
+  confetti: () => [[T('s6_hosting', 'online'), 540, 640, s6.end], [T('s8_cta', 'sekarang'), 540, 700, loopStart()]],
 
   update3D(t, sid) {
     // globe
@@ -104,7 +104,7 @@ register({
     // s7
     ANIM.flow(U.flow, t, [T('s7_recap', 'domain'), T('s7_recap', 'mencari'), T('s7_recap', 'data center'), T('s7_recap', 'layar')], s7.start + .05, s7.end);
     // s8
-    { const e = env(t, s8.start + .05, 999); setPop(U.cta, e);
+    { const e = env(t, s8.start + .05, loopStart(), .4, .35); setPop(U.cta, e);
       if (e) { const tz = T('s8_cta', 'zenhosta.com'), bk = P(t, tz - .1, .45), br = U.cta.querySelector('.brand');
         br.style.transform = `scale(${lerp(.6, 1, backOut(bk))})`; br.style.opacity = easeOut(bk) * .85 + .15;
         U.cta.querySelector('.btn').style.transform = `scale(${t > tz ? 1 + Math.sin((t - tz) * 6) * .04 : 1})`; } }

@@ -69,6 +69,20 @@ Format "apa jadinya kalau" sedang sangat populer untuk animasi edukasi faceless;
 | Angka mengejutkan karangan | Fakta yang bisa dicek, atau jenis hook lain |
 | Panel UI menutupi teks hook | Panel scene 1 muncul setelah `hookEnd()` |
 
+## Re-hook di tengah & ajakan komentar
+
+Retensi rawan turun setelah ±50% durasi. Video > 40 dtk wajib punya:
+
+- **Re-hook** — satu scene di 30–70% durasi dibuka dengan kalimat pemancing baru, tandai
+  `"rehook": true`. Pola: "Tapi yang ketiga ini paling banyak orang nggak sadar…", "Nah, ini bagian
+  paling penting…", "Dan ternyata…". Beri shot dramatis (cut ke `host_close`/`mascot_close`),
+  `punch` di kata kuncinya, dan efek `boom`/`whoosh`.
+- **Ajakan komentar** — satu pertanyaan ringan ke penonton tepat sebelum CTA (atau di awal CTA),
+  tandai `"comment_prompt": true`. Pertanyaan yang gampang dijawab: pengalaman ("Kamu pernah…?"),
+  pilihan ("Tim A atau B?"), tebakan. Bukan "jangan lupa like & comment".
+
+`plan_timing.py` memperingatkan kalau keduanya belum ada.
+
 ## Cara kerja di Tahap 1
 
 1. Tulis **3 versi hook** dengan jenis berbeda yang cocok untuk topik (lapis ucapan, teks, visual).

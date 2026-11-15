@@ -3,16 +3,20 @@
 Pakai:
   python render.py <proyek> --stills 3.5 12 40     # cek beberapa detik -> <proyek>/previews/*.png
   python render.py <proyek> --clip 10 18            # klip pendek dgn suara -> <proyek>/previews/clip_10-18.mp4
-  python render.py <proyek> [--workers 4]          # semua frame -> <proyek>/frames/*.jpg (bisa dilanjut)
+  python render.py <proyek> [--workers 4] [--gpu]  # semua frame -> <proyek>/frames/*.jpg (bisa dilanjut)
+  python render.py <proyek> --gpu --check-gpu       # cek apakah GPU terpakai
 """
 import os, sys, json, time, argparse, pathlib, multiprocessing as mp
 ARGS = ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader",
         "--allow-file-access-from-files", "--disable-gpu-compositing"]
+ARGS_GPU = ["--use-gl=angle", "--use-angle=default", "--enable-gpu-rasterization", "--ignore-gpu-blocklist",
+            "--enable-zero-copy", "--allow-file-access-from-files", "--headless=new"]
 
 
 def open_page(p, proj):
     exe = os.environ.get("CHROME_PATH")
-    b = p.chromium.launch(args=ARGS, **({"executable_path": exe} if exe else {}))
+    gpu = os.environ.get("RENDER_GPU") == "1"
+    b = p.chromium.launch(args=ARGS_GPU if gpu else ARGS, **({"executable_path": exe} if exe else {}))
     pg = b.new_page(viewport={"width": 1080, "height": 1920})
     errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)))
@@ -52,8 +56,20 @@ def main():
     ap.add_argument("--stills", nargs="*", type=float)
     ap.add_argument("--clip", nargs=2, type=float, metavar=("MULAI", "AKHIR"))
     ap.add_argument("--workers", type=int, default=max(1, min(4, (os.cpu_count() or 2) // 2)))
+    ap.add_argument("--gpu", action="store_true", help="pakai kartu grafis (lebih cepat di komputer dengan GPU)")
+    ap.add_argument("--check-gpu", action="store_true", help="tampilkan renderer WebGL yang dipakai lalu keluar")
     a = ap.parse_args()
+    if a.gpu:
+        os.environ["RENDER_GPU"] = "1"
     proj = os.path.abspath(a.proj)
+    if a.check_gpu:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            b, pg, _ = open_page(p, proj)
+            info = pg.evaluate("(()=>{const g=document.createElement('canvas').getContext('webgl');const e=g.getExtension('WEBGL_debug_renderer_info');return e?g.getParameter(e.UNMASKED_RENDERER_WEBGL):g.getParameter(g.RENDERER)})()")
+            b.close()
+        print("Renderer WebGL:", info, "(SwiftShader = CPU; selain itu = GPU)")
+        return
     tl = json.load(open(os.path.join(proj, "timeline.json"), encoding="utf-8"))
     if a.stills is not None:
         from playwright.sync_api import sync_playwright

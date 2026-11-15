@@ -618,7 +618,8 @@
           "internet",
           "pop"
         ]
-      ]
+      ],
+      "rehook": true
     },
     {
       "id": "s6_hosting",
@@ -931,7 +932,8 @@
           "sekarang",
           "success_chime"
         ]
-      ]
+      ],
+      "comment_prompt": true
     }
   ],
   "thumbnail": {
@@ -973,5 +975,10 @@
       "y": 820,
       "color": "#34D399"
     }
-  }
+  },
+  "metaphor": {
+    "scene": "s3_domain",
+    "idea": "Domain = rumah dengan papan alamat; angka IP = deretan angka yang bikin pusing"
+  },
+  "loop_end": true
 }

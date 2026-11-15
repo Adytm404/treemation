@@ -142,6 +142,9 @@ def build_outputs(plan, words, bounds, total, meta_extra, fps=30):
             "mascot": {"action": masc.get("action", "idle"), "eyes": masc.get("eyes", "normal"),
                        "changes": [{"trigger_word": c[0], "action": c[1], "eyes": c[2], "start": F(c[0]),
                                     "start_tc": tc(F(c[0]))} for c in masc.get("changes", [])]},
+            "punch": [{"trigger_word": k[0], "strength": k[1] if len(k) > 1 else .08, "start": F(k[0])} for k in sc.get("punch", [])],
+            "shake": [{"trigger_word": k[0], "strength": k[1] if len(k) > 1 else .12, "start": F(k[0])} for k in sc.get("shake", [])],
+            "rehook": bool(sc.get("rehook")), "comment_prompt": bool(sc.get("comment_prompt")),
             "enter": [{"trigger_word": e[0], "who": e[1], "from": e[2] if len(e) > 2 else "side",
                        "start": round(start, 2) if e[0] == "@start" else F(e[0])} for e in sc.get("enter", [])],
             "shots": [{"trigger_word": k[0], "shot": k[1], "transition": k[2] if len(k) > 2 else "cut",
@@ -265,6 +268,19 @@ def hook_lint(plan, doc=None):
         warn.append("Tambahkan efek suara di kata pertama scene 1 (whoosh/pop/boing).")
     if doc:
         sc = doc["scenes"]
+        total = doc["meta"]["duration"]
+        if total > 40:
+            mid = [x for x in sc if x.get("rehook")]
+            if not mid:
+                warn.append('Belum ada re-hook: tandai satu scene di tengah video dengan "rehook": true dan buka scene itu dengan kalimat pemancing (lihat hook.md).')
+            elif not any(.3 * total <= x["start"] <= .7 * total for x in mid):
+                warn.append("Re-hook sebaiknya mulai di 30–70% durasi video.")
+            if not any(x.get("comment_prompt") for x in sc):
+                warn.append('Belum ada ajakan komentar: satu pertanyaan ke penonton sebelum CTA, tandai scene-nya "comment_prompt": true.')
+        if not plan.get("metaphor"):
+            warn.append('Belum ada metafora visual: isi "metaphor": {"scene": ..., "idea": ...} — satu adegan ilustrasi kiasan (lihat naskah-dan-plan.md).')
+        if not plan.get("loop_end"):
+            warn.append('Pertimbangkan "loop_end": true — akhir video kembali ke komposisi frame pertama supaya ditonton ulang.')
         if len(sc) > 1 and sc[1]["start"] > 8.5:
             warn.append(f"Scene ke-2 baru mulai di {sc[1]['start']:.1f} dtk — janji hook harus mulai dibayar ≤ 8 dtk.")
     return warn

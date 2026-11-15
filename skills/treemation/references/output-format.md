@@ -24,7 +24,9 @@ Urutan tetap:
 5. **Karakter** (1–2 kalimat): siapa host-nya (gaya rambut, baju, warna, aksesori) dan kenapa
    cocok dengan konteks pengguna, plus maskotnya. Tawarkan ganti (mis. versi berhijab, cowok/cewek,
    warna merek).
-6. **Thumbnail** (1–2 kalimat): teks judul cover (tulis persis, huruf kuning ditandai), props
+6. **Metafora & ending** (1 kalimat): adegan metafora visualnya apa, dan bahwa akhir video
+   menyambung ke frame pertama supaya penonton menonton ulang.
+6b. **Thumbnail** (1–2 kalimat): teks judul cover (tulis persis, huruf kuning ditandai), props
    yang dipamerkan, dan ekspresi host. Gambarnya dibuat di Tahap 2.
 7. Tabel scene:
 
@@ -32,6 +34,7 @@ Urutan tetap:
    |---|---|---|---|---|
    | 00:00–00:05 | Hook | close-up wajah → wide | biru malam, bokeh | Browser loading berubah jadi online, bola dunia |
 
+   Tandai baris re-hook dengan "(re-hook)" di kolom Scene dan baris ajakan komentar.
    Waktu dari `video-plan.json` (format mm:ss). "Kamera" = urutan shot dalam bahasa sehari-hari
    (close-up wajah, close-up maskot, fokus ilustrasi, wide, low angle). "Latar" = tema + pola dalam
    bahasa sehari-hari (biru es + salju, gelap + kode biner). "Yang tampil" ≤ 15 kata.
@@ -52,11 +55,13 @@ Dikerjakan otomatis sampai selesai; balasan ini dikirim setelah MP4 dan thumbnai
    wajah sudah di area aman potongan grid profil), `video-plan.json` (timing asli), folder proyek /
    `scenes.js` untuk diubah dan dirender ulang.
 3. Tabel scene (Waktu | Scene | Kamera | Latar | Yang tampil) dengan waktu **hasil alignment**.
-4. Catatan jujur, hanya yang memang ada: frasa bertanda `<-- cek` dari align, momen visual yang
+4. Musik: sebut musik yang dipakai (file pengguna, atau musik sederhana buatan code) dan bahwa
+   musik otomatis mengecil saat narasi bicara; tawarkan ganti dengan musik pilihan pengguna.
+5. Catatan jujur, hanya yang memang ada: frasa bertanda `<-- cek` dari align, momen visual yang
    kurang mulus yang kamu lihat saat mengecek frame, apa pun yang dikarang dan perlu diganti
    pengguna (logo, warna merek). Timing kata di dalam kalimat panjang adalah perkiraan per suku
    kata — sebutkan sekali saja.
-5. Penutup: tawarkan perubahan konkret (warna merek, tampilan karakter, ukuran caption, musik latar
+6. Penutup: tawarkan perubahan konkret (warna merek, tampilan karakter, ukuran caption, musik latar
    lewat `--music`).
 
 Jangan menempelkan isi JSON penuh ke chat; cukup sebut path-nya.

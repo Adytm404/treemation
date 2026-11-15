@@ -7,8 +7,10 @@
 | Hook | Salah satu jenis di `hook.md` (pertanyaan, salah kaprah, apa jadinya kalau, analogi, …) | 1 kalimat, ≤ 14 kata, tanpa sapaan |
 | Pengantar | Sebut jumlah poin ("ada empat hal penting") + ajakan "Yuk, kita bahas!" | ±10 kata |
 | Langkah 1..n | "Pertama, X. X itu ... contohnya ..." — satu konsep, satu analogi, satu contoh | 20–28 kata |
+| (di tengah) | **Re-hook**: kalimat pemancing di awal langkah ke-2/ke-3 (`"rehook": true`) | 1 kalimat |
 | Rangkuman | "Jadi, saat kamu ..., lalu ..." — alur sebab-akibat semua poin | ±20 kata |
-| CTA | Pertanyaan + ajakan ke merek/URL pengguna | ±12 kata |
+| Ajakan komentar | Satu pertanyaan ringan ke penonton (`"comment_prompt": true`) | ±8 kata |
+| CTA | Ajakan ke merek/URL pengguna | ±12 kata |
 
 Total 120–150 kata ≈ 60–70 detik (ElevenLabs bahasa Indonesia terukur ±5 suku kata/detik).
 Lebih dari 4 langkah membuat video terlalu panjang; gabungkan atau buat seri.
@@ -74,6 +76,22 @@ jadi beri tanda baca yang wajar. Hindari tanda kurung, emoji, dan simbol di nara
 
 Aturan:
 
+- `rehook` / `comment_prompt` (per scene, bool): lihat `hook.md`.
+- `punch` (per scene): `[[kata, kekuatan]]` zoom cepat 5–10% di kata itu (default 0,08). Selain itu
+  engine otomatis memberi zoom punch kecil di caption kata kunci (jarak ≥ 2,5 dtk, tidak dekat
+  pergantian shot); matikan dengan `"auto_punch": false`.
+- `shake` (per scene): `[[kata, kekuatan]]` guncangan kamera 0,35 dtk (default 0,12). Otomatis juga
+  pada efek suara `boom`, `boing`, `buzz`, `multiply_swell`.
+- `music` (opsional): `{"file": "musik.mp3", "volume": 0.35}` atau `{"file": "auto"}` — lihat SKILL.md.
+- `metaphor` (wajib untuk video edukasi): `{"scene": "s6_recap", "idea": "..."}` — satu adegan
+  kiasan visual yang membuat konsep abstrak jadi gambar (mis. "perhatian" = sinar dari mata ke
+  kantong uang; "keamanan" = gembok raksasa menutup pintu; "bunga pinjaman" = bola salju membesar).
+  Biasanya di rangkuman atau langkah terpenting, dengan shot `illustration`.
+- `loop_end` (disarankan `true`): ±0,8 dtk terakhir kamera & latar kembali ke komposisi frame
+  pertama, sehingga putaran ulang terasa menyambung. Tulis juga kalimat penutup CTA yang enak
+  disambung ke kalimat hook. Panel scene terakhir di `scenes.js` harus berakhir di `loopStart()`.
+- `render_style` (opsional): `{"outline": true, "glow": true, "blur_bg": true}` — garis tepi kartun,
+  halo pada benda menyala, latar blur saat close-up. Semuanya default `true`.
 - `character_exit` (opsional, default `slide`): cara karakter keluar untuk shot `illustration`.
 - `enter` (per scene, opsional): kemunculan tiba-tiba dari bawah/samping/atas — lihat "Shot kamera".
 - `pronunciation`: cara baca kata asing untuk lip sync vokal (lihat `karakter.md` → "Lip sync
@@ -221,10 +239,15 @@ Judul dan wajah host harus di dalam pita tengah y 420–1500.
 
 ## Pose host (`gestures[1]`)
 
+Lengan punya bahu, siku, dan pergelangan; setiap pergantian pose otomatis memakai antisipasi
+(mundur sedikit), lewat sasaran lalu kembali, plus squash kecil di badan.
+
 `idle`, `scratch` (garuk kepala), `point_up`, `point_panel` (tunjuk ke area atas kanan),
-`present` (tangan terbuka ke samping), `spread` (dua tangan terbuka), `count`, `thumbs`, `shrug`,
-`hold` (memegang sesuatu di depan), `shake` (menggeleng dengan tangan), `point_viewer`
-(menunjuk penonton), `think`, `wave`, `celebrate` (dua tangan ke atas).
+`present` (tangan terbuka, siku menekuk), `spread` (dua tangan terbuka), `count` (lengan bawah tegak,
+menghitung), `thumbs`, `shrug` (bahu naik, siku menekuk keluar), `hold` (memegang di depan dada),
+`shake` (telunjuk bergoyang "jangan"), `point_viewer` (menunjuk penonton), `think` (tangan di dagu),
+`wave` (melambai dari siku), `hands_on_hips` (tangan di pinggang, percaya diri), `clap` (bertepuk
+tangan), `explain` (telapak terbuka, menjelaskan), `celebrate` (dua tangan ke atas).
 
 Pola yang enak: tunjuk area atas (`point_panel`/`point_up`) saat panel muncul, `present`/`spread`
 saat menjelaskan, `count` saat menyebut angka, `celebrate` di momen sukses dan CTA.
@@ -236,7 +259,9 @@ Ganti pose tiap 2–4 detik; jangan lebih sering dari 0,6 detik.
 
 ## Maskot
 
-Aksi: `idle`, `tilt`, `bounce`, `jump`, `shiver`, `look` (menoleh ke panggung).
+Aksi: `idle`, `tilt`, `bounce`, `jump` (dengan stretch saat naik, squash + debu saat mendarat),
+`shiver`, `look` (menoleh ke panggung), `nod` (mengangguk setuju), `shake_head` (menggeleng),
+`point` (tangan kecil menunjuk ke tengah), `carry_coin` / `carry_phone` (mengangkat koin/HP di atas kepala).
 Mata: `normal`, `happy` (^ ^), `wow` (o o), `question` (? ?), `dizzy` (spiral), `cold` (> <),
 `sad`, `love`.
 Maskot bereaksi secara emosional pada isi: bingung di hook, pusing saat hal ribet, senang saat solusi.
@@ -246,5 +271,6 @@ Maskot bereaksi secara emosional pada isi: bingung di hook, pusing saat hal ribe
 `whoosh`, `whoosh_in`, `whoosh_label` (pergantian label; otomatis dimajukan 0,25 dtk), `pop`,
 `pop_x3`, `pop_x4` (beberapa pop berurutan untuk elemen bertahap), `ding`, `success_chime`,
 `typing`, `buzz` (salah/ribet), `rise_hum` (sesuatu naik), `multiply_swell` (banyak muncul),
-`scratch` (dicoret), `tick` (langkah diagram), `boing`, `coin`.
+`scratch` (dicoret), `tick` (langkah diagram), `boing`, `coin`, `count` (detak angka berjalan),
+`boom` (hentakan rendah + guncangan kamera).
 Satu atau dua per scene sudah cukup.

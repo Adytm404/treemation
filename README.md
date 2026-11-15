@@ -108,8 +108,12 @@ Generate the narration in ElevenLabs, then send the MP3. The agent processes it 
 | 🎥 Clear camera | Characters vanish or slide straight out of frame before the camera focuses on props — never walking across the shot |
 | 🎨 Adaptive background | Theme, particles (bokeh, stars, bubbles, snow, binary code) and motif icons change per scene |
 | 🪝 Hook rules | 3-layer hook (visual, voice, on-screen text) with an automatic lint before the script is sent |
-| 💬 Captions | Big word-by-word captions, keywords highlighted in yellow |
-| 🔊 Sound effects | Whoosh, pop, ding, chime, typing… generated procedurally and mixed under the voice |
+| 💬 Captions | Big word-by-word karaoke captions, keywords highlighted in yellow, zoom punch on key words |
+| 🎯 Precise timing | Optional Whisper word timestamps (`--whisper`) for exact caption and lip-sync timing |
+| 🎭 Acting | Expressive poses (explain, clap, hands on hips), mascot reactions, squash-and-stretch, cartoon outlines |
+| 🔊 Sound effects | Whoosh, pop, ding, chime, typing, count-up, boom… generated procedurally and mixed under the voice |
+| 🎵 Background music | Your own track or a royalty-free code-generated one (`--music auto`), ducked under the narration |
+| ⚡ GPU rendering | Optional `--gpu` render (3–10× faster on machines with a graphics card) |
 | 🖼️ Thumbnail | 1080×1920 cover with title, props, frozen pose, and a safe-area check for 3:4 / 4:5 / 1:1 crops |
 
 ## Prerequisites
@@ -118,6 +122,7 @@ Generate the narration in ElevenLabs, then send the MP3. The agent processes it 
 - **Python 3** with `numpy` (and `pillow` for the thumbnail safe-area check)
 - **ffmpeg**
 - **Playwright Chromium** — `pip install playwright && python -m playwright install chromium`
+- *Optional:* `faster-whisper` for precise word timing (`pip install faster-whisper`, first model download ±500 MB)
 
 The setup script checks these and tells the agent what is missing.
 

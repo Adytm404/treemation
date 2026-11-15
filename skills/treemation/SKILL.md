@@ -105,8 +105,12 @@ Folder contents when done: `plan.json` (you write it), `scenes.js` (you write it
 2. Make sure the narration in `plan.json` is **exactly** what was read (the user may have edited
    the script in ElevenLabs — ask if unsure, or check the duration: a big gap from the estimate
    means the text differs).
-3. `python <skill>/scripts/align.py <project>` → synced `timeline.js`, `timeline.json`,
-   `video-plan.json`. Look at the phrase list: lines marked `<-- cek` have suspicious durations,
+3. `python <skill>/scripts/align.py <project> --whisper` → synced `timeline.js`, `timeline.json`,
+   `video-plan.json`. With `--whisper` (needs `pip install faster-whisper`; the first model
+   download is ±500 MB) each word's timing comes from real speech recognition, so karaoke captions
+   and lip sync land exactly; without it, pause + syllable alignment is used. If faster-whisper is
+   not installed, the script falls back to the old method automatically. Look at the phrase list:
+   lines marked `<-- cek` have suspicious durations,
    usually because the text differs from the audio or ElevenLabs paused somewhere unexpected.
    Fix the text in the plan if needed and run it again.
 4. Read `references/engine-api.md`, then write `<project>/scenes.js`. Start by copying the
@@ -122,16 +126,23 @@ Folder contents when done: `plan.json` (you write it), `scenes.js` (you write it
    short clip with sound: `python <skill>/scripts/render.py <project> --clip 10 18` →
    `previews/clip_10-18.mp4`.
 6. Full render: `python <skill>/scripts/render.py <project>` (resumable if interrupted;
-   `--workers N` for many-core CPUs). Roughly 0.3–0.6 s per frame per worker.
-   Run it in the background and monitor progress if it takes long.
-7. Thumbnail: `python <skill>/scripts/thumbnail.py <project>` → `<project>/thumbnail.png`
+   `--workers N` for many-core CPUs). If the computer has a graphics card, first check
+   `render.py <project> --gpu --check-gpu`; if the renderer is not SwiftShader, render with `--gpu`
+   (3–10× faster). Compare one `--gpu` still with the CPU version before the full render.
+   Roughly 0.3–0.6 s per frame per worker. Run it in the background and monitor progress if it
+   takes long.
+7. Background music: if the user sends a music file (or `music` is set in plan.json), use it with
+   automatic ducking (the music dips while the narration speaks). Without a file, use
+   `--music auto` (simple code-generated, royalty-free music) and mention in the reply that the
+   user can replace it with music of their choice — never use copyrighted songs.
+8. Thumbnail: `python <skill>/scripts/thumbnail.py <project>` → `<project>/thumbnail.png`
    (1080×1920 cover) and `previews/thumbnail-cek.png` (safe-area guides). **Look** at the check
    image: title and host face inside the red box, title not covering the face, props visible.
    Adjust `props_from`, `stage`, or `title_y` and repeat. Can be done while the full render runs.
-8. `python <skill>/scripts/encode.py <project> <name>.mp4` → sound effects are generated
-   automatically, mixed quietly under the narration, then encoded to a 1080×1920 30 fps
-   H.264 + AAC MP4. Options: `--no-sfx`, `--music file.mp3`.
-9. Check a few frames of the final MP4 (ffmpeg `-ss <seconds> -frames:v 1`), then reply in the
+9. `python <skill>/scripts/encode.py <project> <name>.mp4 [--music file.mp3|auto]` → sound effects
+   are generated automatically, mixed quietly under the narration (+ music with ducking), then
+   encoded to a 1080×1920 30 fps H.264 + AAC MP4.
+10. Check a few frames of the final MP4 (ffmpeg `-ss <seconds> -frames:v 1`), then reply in the
    Stage 2 format from `references/output-format.md`.
 
 ## Principles
@@ -168,6 +179,17 @@ Folder contents when done: `plan.json` (you write it), `scenes.js` (you write it
   ranges (e.g. IP `203.0.113.x`) or clear labels. Never invent statistics.
 - **Honest CTA.** State the user's brand/URL as given, without claims they didn't provide
   (prices, promos, "the best", fake deadlines).
+- **Alive every second.** Karaoke captions, a zoom punch on keywords, a nod on stressed words, eyes
+  glancing at what is pointed at, numbers that count up, particles (coins, sparkles) on the
+  payoff — some automatic, the rest added in `scenes.js` (`engine-api.md` 6a).
+- **Acting, not posing.** Pick poses that support the sentence (`explain` while explaining,
+  `count` when naming numbers, `hands_on_hips` when confident, `clap` on success), and give the
+  mascot reactions (`nod`, `shake_head`, `point`, `carry_coin`). Anticipation, squash-and-stretch,
+  swinging hair, landing dust, and cartoon outlines come automatically from the engine.
+- **One visual metaphor per video** (`metaphor` in the plan) and **an ending that loops back to the
+  start** (`loop_end`). `plan_timing.py` warns when they're missing.
+- **Retention to the end.** Videos > 40 s get a re-hook in the middle and one comment prompt before
+  the CTA (`hook.md`).
 - **Never flash more than 3× per second** (safe for photosensitive viewers).
 - If something can't be built (e.g. a style that needs complex 3D models), say so and offer the
   closest voxel version.
@@ -179,7 +201,7 @@ Folder contents when done: `plan.json` (you write it), `scenes.js` (you write it
 - `scripts/plan_timing.py` — Stage 1: estimated timing + ElevenLabs text.
 - `scripts/align.py` — Stage 2: sync to the audio (ffmpeg + numpy, no AI model).
 - `scripts/render.py` — preview stills / render all frames (Playwright Chromium).
-- `scripts/encode.py` — sound effects, mix, MP4.
+- `scripts/encode.py` — sound effects, background music (file or `auto`) with ducking, mix, MP4.
 - `scripts/thumbnail.py` — TikTok/Reels cover + safe-area check image.
 - `scripts/preview_characters.py` — render all character presets, or the host from plan.json (full body + close-up).
 - `scripts/plan_lib.py` — shared by the other scripts.
