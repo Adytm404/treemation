@@ -1,7 +1,7 @@
 # Engine API untuk scenes.js
 
 `engine.js` sudah mengurus: latar biru + bokeh, lantai grid, kamera, host + maskot (pose,
-ekspresi, kedip, lip sync vokal A/I/E/O dari `TL.visemes`), panggung melayang, label atas + garis progres, caption,
+ekspresi, kedip, lip sync vokal A/I/U/E/O dari `TL.visemes`), panggung melayang, label atas + garis progres, caption,
 confetti. Semua itu digerakkan oleh `timeline.js` dari `align.py`.
 `scenes.js` hanya menambah **props 3D di panggung** dan **elemen UI per scene**.
 
@@ -62,9 +62,12 @@ Preset bisa diubah atau ditambah di `setup()`:
 `"desk"` di plan.json. Host di x≈-1,75 (kepala y 5–7,6, wajah z≈1,6), maskot x≈2,85 (tinggi ±2,7,
 z 1,4), panggung (0,55; 8,35; -3) skala 1,28.
 
-Shot dengan `hideChars: true` (bawaan: `illustration`) membuat host berjalan ke kiri dan maskot ke
-kanan sampai keluar bingkai sebelum kamera tiba, lalu kembali saat shot berikutnya dimulai.
-Shot buatan sendiri yang fokus ke props juga bisa diberi `hideChars: true`.
+Shot dengan `hideChars: true` (bawaan: `illustration`) mengeluarkan karakter dari bingkai tanpa
+menghalangi kamera: mode `hide` (langsung hilang/muncul) atau `slide` (geser lurus ke samping,
+tetap menghadap kamera, selesai sebelum kamera bergerak). Mode dari elemen ke-4 shot, lalu
+`character_exit` plan, lalu default (`cut` → `hide`, `move` → `slide`). Kemunculan variasi dari
+bawah/samping/atas diatur `enter` per scene. Shot buatan sendiri yang fokus ke props juga bisa
+diberi `hideChars: true`.
 
 `camera(t, sid, cam)` di `register` dipanggil setelah shot dihitung; `cam` = `{x,y,z, lx,ly,lz, fov, shot}`
 — ubah kalau butuh gerakan khusus (mis. orbit). Biasanya tidak perlu.

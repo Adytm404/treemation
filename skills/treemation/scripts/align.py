@@ -136,7 +136,7 @@ for w_ in words:
         for f in range(int(round((w_["start"] + k_ * d) * fps)), min(frames, int(round((w_["start"] + (k_ + 1) * d) * fps)))):
             vis[f] = v_
 vis = "".join(v_ if mouth[f] >= .12 else "-" for f, v_ in enumerate(vis))
-tl = {"fps": fps, "total": total, "frames": frames, "visemes": vis, "audio_length": round(AUDIO_LEN, 2), "characters": doc.get("characters", {}), "thumbnail": plan.get("thumbnail"), "hook": doc.get("hook"), "scenes": doc["scenes"], "captions": doc["captions"],
+tl = {"fps": fps, "total": total, "frames": frames, "visemes": vis, "character_exit": plan.get("character_exit", "slide"), "audio_length": round(AUDIO_LEN, 2), "characters": doc.get("characters", {}), "thumbnail": plan.get("thumbnail"), "hook": doc.get("hook"), "scenes": doc["scenes"], "captions": doc["captions"],
       "words": [{k: u[k] for k in ("spoken", "display", "start", "end", "scene")} for u in words], "mouth": mouth}
 json.dump(tl, open(os.path.join(proj, "timeline.json"), "w", encoding="utf-8"), ensure_ascii=False)
 open(os.path.join(proj, "timeline.js"), "w", encoding="utf-8").write("window.TL=" + json.dumps(tl, ensure_ascii=False) + ";")

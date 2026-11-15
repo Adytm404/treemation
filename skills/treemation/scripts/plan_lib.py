@@ -7,7 +7,7 @@ BASE_SYL = {"ip": 2, "dua": 2, "online": 2, "website": 2, "file": 1, "address": 
             "update": 2, "software": 2, "hardware": 2, "game": 1, "save": 1, "share": 1, "like": 1}
 
 
-# Lip sync vokal: mulut hanya punya bentuk A, I, E, O (u → O) + tutup.
+# Lip sync vokal: mulut punya bentuk A, I, U, E, O + tutup.
 # Kata asing ditulis sesuai cara baca supaya vokalnya benar (bisa ditambah lewat plan["pronunciation"]).
 BASE_PRON = {"website": "websait", "online": "onlain", "offline": "oflain", "file": "fail", "upload": "aplod",
              "download": "daunlod", "software": "sofwer", "hardware": "hardwer", "email": "imel", "google": "gugel",
@@ -17,11 +17,11 @@ BASE_PRON = {"website": "websait", "online": "onlain", "offline": "oflain", "fil
              "laptop": "leptop", "game": "gem", "chat": "cet", "data": "data", "ai": "ei", "tiktok": "tiktok",
              "instagram": "instagram", "reels": "rils", "shorts": "syorts", "follow": "folo", "followers": "folowers",
              "content": "konten", "creator": "kriyetor", "online.": "onlain"}
-VISEME = {"a": "A", "i": "I", "u": "O", "e": "E", "o": "O"}
+VISEME = {"a": "A", "i": "I", "u": "U", "e": "E", "o": "O"}
 
 
 def visemes(text, plan=None):
-    """Urutan bentuk mulut untuk teks yang diucapkan. 'aku mau makan' -> A O A O A A."""
+    """Urutan bentuk mulut untuk teks yang diucapkan. 'aku mau makan' -> A U A U A A."""
     pron = {**BASE_PRON, **{k.lower(): v for k, v in ((plan or {}).get("pronunciation") or {}).items()}}
     seq = []
     for w in re.split(r"[\s\-]+", text.lower()):
@@ -142,7 +142,10 @@ def build_outputs(plan, words, bounds, total, meta_extra, fps=30):
             "mascot": {"action": masc.get("action", "idle"), "eyes": masc.get("eyes", "normal"),
                        "changes": [{"trigger_word": c[0], "action": c[1], "eyes": c[2], "start": F(c[0]),
                                     "start_tc": tc(F(c[0]))} for c in masc.get("changes", [])]},
+            "enter": [{"trigger_word": e[0], "who": e[1], "from": e[2] if len(e) > 2 else "side",
+                       "start": round(start, 2) if e[0] == "@start" else F(e[0])} for e in sc.get("enter", [])],
             "shots": [{"trigger_word": k[0], "shot": k[1], "transition": k[2] if len(k) > 2 else "cut",
+                       **({"chars": k[3]} if len(k) > 3 else {}),
                        "start": round(start, 2) if k[0] == "@start" else F(k[0]),
                        "start_tc": tc(start if k[0] == "@start" else F(k[0]))} for k in sc.get("shots", [])],
             "visuals": vis,

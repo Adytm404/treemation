@@ -68,24 +68,25 @@ Tulis di `plan.json`:
 
 Maskot (`mascot.spec`): `body`, `face`, `trim`, `legs`, `leds` (bool), `pixel` (default ikut host).
 
-## Lip sync vokal (A · I · E · O)
+## Lip sync vokal (A · I · U · E · O)
 
 Mulut host hanya membaca **vokal** dari kata yang sedang diucapkan dan berganti bentuk mengikuti
-urutannya. Konsonan diabaikan; **u memakai bentuk O**. Contoh: "aku mau makan" → A O A O A A.
+urutannya. Konsonan diabaikan. Lima vokal punya bentuk sendiri. Contoh: "aku mau makan" → A U A U A A.
 
 | Bentuk | Vokal | Rupa (pixel-skin) |
 |---|---|---|
 | A | a | terbuka lebar & tinggi, gigi atas + lidah |
 | I | i | lebar pipih, deretan gigi |
 | E | e | sedang, gigi + celah merah |
-| O | o, u | bulat kecil |
+| U | u | kecil & monyong (bibir maju) |
+| O | o | bulat, lebih besar dari U |
 | tutup | — | saat jeda/diam (volume audio rendah) atau di luar kata; bentuk diam ikut ekspresi (senyum, smirk) |
 
 Cara kerja (otomatis di `align.py`): setiap kata dibagi rata menurut jumlah vokalnya di dalam
 waktu kata itu, lalu frame yang audionya hening dipaksa tutup. Hasilnya `TL.visemes` (satu huruf
-per frame: `A I E O -`).
+per frame: `A I U E O -`).
 
-**Kata asing** dibaca sesuai ucapan, bukan ejaan: `website` → "websait" (E A I), `online` →
+**Kata asing** dibaca sesuai ucapan, bukan ejaan: `website` → "websait" (E A I), `youtube` → "yutub" (U U), `online` →
 "onlain", `file` → "fail", `IP` → "aipi". Daftar bawaan ada di `BASE_PRON` (`plan_lib.py`); tambah
 sendiri di plan.json:
 

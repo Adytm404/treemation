@@ -104,7 +104,8 @@ Generate the narration in ElevenLabs, then send the MP3. The agent processes it 
 |---|---|
 | 🎬 Dynamic camera | Close-up, medium, mascot close-up, illustration, wide, low angle — cuts and moves on the right word |
 | 🧍 Pixel-skin host | Blocky game-style character with pixel anime face; 8 presets, hijab, outfits, skin tones, accessories |
-| 👄 Vowel lip sync | Mouth shapes A · I · E · O follow each word's vowels and close on pauses; foreign words read by pronunciation |
+| 👄 Vowel lip sync | Mouth shapes A · I · U · E · O follow each word's vowels and close on pauses; foreign words read by pronunciation |
+| 🎥 Clear camera | Characters vanish or slide straight out of frame before the camera focuses on props — never walking across the shot |
 | 🎨 Adaptive background | Theme, particles (bokeh, stars, bubbles, snow, binary code) and motif icons change per scene |
 | 🪝 Hook rules | 3-layer hook (visual, voice, on-screen text) with an automatic lint before the script is sent |
 | 💬 Captions | Big word-by-word captions, keywords highlighted in yellow |

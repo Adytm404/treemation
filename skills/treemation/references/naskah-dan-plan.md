@@ -74,6 +74,8 @@ jadi beri tanda baca yang wajar. Hindari tanda kurung, emoji, dan simbol di nara
 
 Aturan:
 
+- `character_exit` (opsional, default `slide`): cara karakter keluar untuk shot `illustration`.
+- `enter` (per scene, opsional): kemunculan tiba-tiba dari bawah/samping/atas — lihat "Shot kamera".
 - `pronunciation`: cara baca kata asing untuk lip sync vokal (lihat `karakter.md` → "Lip sync
   vokal"). Isi untuk merek/istilah asing yang ejaannya beda dengan ucapan.
 - `hook`: `text` = 1–2 baris teks besar (≤ 7 kata, `*kata*` kuning) yang tampil dari frame 0 lalu
@@ -106,18 +108,43 @@ Setiap scene punya daftar `[kata_pemicu, shot, transisi]`. Shot berlaku sampai s
 | `host_medium` | host setengah badan, gestur jelas | menjelaskan, menghitung, transisi antar langkah |
 | `host_close` | wajah host besar (seperti vlog) | hook, pertanyaan ke penonton, punchline, CTA |
 | `mascot_close` | maskot dekat, lengan host kadang masuk | reaksi lucu: pusing, kedinginan, kaget, senang |
-| `illustration` | props 3D di panggung memenuhi layar; host dan maskot otomatis berjalan minggir dulu (mulai 0,35 dtk sebelum shot) lalu kembali saat shot berganti | saat props sedang dibahas (rumah, rak, gedung, globe) |
+| `illustration` | props 3D di panggung memenuhi layar; host & maskot keluar bingkai dulu (lihat "Karakter keluar & muncul") lalu kembali saat shot berganti | saat props sedang dibahas (rumah, rak, gedung, globe) |
 | `low_angle` | dari bawah, heroik | momen sukses, "langsung online!", ajakan akhir |
 
 Transisi: `"cut"` (pindah langsung), `"move"` (kamera bergerak halus 0,7 dtk), atau
-`"move:1.2"` (durasi sendiri). `"@start"` = tepat di awal scene.
+`"move:1.2"` (durasi sendiri). `"@start"` = tepat di awal scene. Elemen ke-4 opsional untuk shot
+`illustration`: cara karakter keluar, `"slide"` atau `"hide"` (lihat bawah).
+
+### Karakter keluar & muncul (tidak boleh menghalangi kamera)
+
+Karakter **tidak boleh lewat di depan kamera atau menutupi ilustrasi**, dan **tidak berbalik badan**.
+Saat masuk ke `illustration` ada dua cara:
+
+| Mode | Gerak | Pasangan transisi |
+|---|---|---|
+| `hide` | langsung hilang tepat saat shot mulai; langsung muncul lagi saat shot berganti | `"cut"` (default untuk cut) — layar langsung pindah ke ilustrasi saja |
+| `slide` | geser lurus ke samping (host ke kiri, maskot ke kanan) sambil tetap menghadap kamera, selesai ±0,05 dtk **sebelum** kamera bergerak; kembali menggeser masuk setelah kamera hampir tiba | `"move"` (default untuk move) |
+
+Contoh: `["alamat", "illustration", "cut", "hide"]`, `["Toko", "illustration", "move", "slide"]`.
+Default seluruh video bisa diatur di plan: `"character_exit": "slide"` atau `"hide"`.
+
+**Muncul tiba-tiba (variasi, jika perlu saja)** — `enter` per scene:
+
+```json
+"enter": [["@start", "host", "bottom"], ["Ketiga", "mascot", "top"]]
+```
+
+`who`: `host`, `mascot`, `both`. `from`: `bottom` (naik dari bawah layar), `side` (menggeser masuk dari
+samping), `top` (jatuh dari atas dan memantul). Pakai di awal scene atau tepat setelah cut / setelah
+shot `illustration`, dan hanya saat karakter itu memang terlihat di shot aktif (mis. maskot tidak
+terlihat di `host_close`/`host_medium`). Maksimal 1–2 kali per video supaya tetap terasa segar.
 
 Ritme yang enak:
 - Ganti shot tiap 3–6 detik; tiap scene minimal 2 shot. Jarak antar shot ≥ 1 detik.
 - **Cut** saat ide baru mulai (awal scene, punchline, reaksi). **Move** saat sesuatu muncul atau
   membesar (props naik → `illustration` dengan move; kembali ke `wide` dengan move).
-- Karakter butuh ±0,8 dtk untuk minggir/kembali; beri jarak ≥ 2 dtk antara masuk dan keluar `illustration`,
-  dan jangan pasang gestur penting host saat `illustration` (dia sedang di luar bingkai).
+- Mode `slide` butuh ±0,4 dtk untuk keluar dan ±0,4 dtk untuk masuk; beri jarak ≥ 2 dtk antara masuk
+  dan keluar `illustration`, dan jangan pasang gestur penting host saat `illustration` (dia di luar bingkai).
 - Hook dibuka `host_close` (wajah langsung bicara ke penonton), lalu move keluar saat visual muncul.
 - Saat props 3D jadi bintang, pakai `illustration`; saat panel UI besar (diagram alur, kartu 2×2,
   CTA) tampil, pakai `wide`/`host_medium`/`host_close` dan pastikan panel tidak menutupi wajah

@@ -84,7 +84,8 @@ export function buildPixelHost(THREE, parent, spec, opts = {}) {
     else if (m === 'vA' || m === 'open2') { row(13, [[6, d], [7, W], [8, W], [9, d]]); row(14, [[6, red], [7, red], [8, red], [9, red]]); row(15, [[6, d], [7, pink], [8, pink], [9, d]]); }  // A: lebar & tinggi
     else if (m === 'vI') { row(13, [[5, d], [6, W], [7, W], [8, W], [9, W], [10, d]]); row(14, [[5, sd], [6, d], [7, d], [8, d], [9, d], [10, sd]]); }                                   // I: lebar pipih, gigi
     else if (m === 'vE') { row(13, [[5, sd], [6, d], [7, W], [8, W], [9, d], [10, sd]]); row(14, [[6, red], [7, red], [8, red], [9, red]]); }                                          // E: sedang
-    else if (m === 'vO') { row(13, [[7, d], [8, d]]); row(14, [[6, d], [7, red], [8, red], [9, d]]); row(15, [[7, d], [8, d]]); }                                                     // O/U: bulat
+    else if (m === 'vU') { row(13, [[7, d], [8, d]]); row(14, [[6, sd], [7, red], [8, red], [9, sd]]); }                                                                         // U: kecil monyong
+    else if (m === 'vO') { row(13, [[7, d], [8, d]]); row(14, [[6, d], [7, red], [8, red], [9, d]]); row(15, [[7, d], [8, d]]); }                                                     // O: bulat lebih besar
   }
   function faceTex(eyes, mouth) {
     const key = eyes + '|' + mouth; if (faceCache[key]) return faceCache[key];

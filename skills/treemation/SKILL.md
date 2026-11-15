@@ -145,15 +145,19 @@ Folder contents when done: `plan.json` (you write it), `scenes.js` (you write it
 - **A living camera, not a static one.** Every scene has at least 2 shots (`host_close`,
   `host_medium`, `mascot_close`, `illustration`, `wide`, `low_angle`) with a cut or move on the
   right word — close-ups for hook/punchline/CTA, `illustration` while props are discussed (the
-  characters automatically step aside, then return), `mascot_close` for reactions.
+  characters disappear or slide out of frame first, then return), `mascot_close` for reactions.
   UI panels must stay inside the active shot's safe zone.
 - **Backgrounds follow the topic.** Each scene (or key word) has a `background`: color theme,
   particle pattern, and motif icons that match the content — cold uses icy blue + snow, servers
   use binary code, the CTA uses warm/brand colors. A static single-color background for the whole
   video feels boring.
-- **The mouth follows vowels.** Lip sync uses 4 mouth shapes A, I, E, O (u = O) following each
-  word's vowel order — "aku mau makan" → A O A O A A — and closes on pauses. Foreign words are
-  read by their pronunciation via `pronunciation` (`references/karakter.md`).
+- **The mouth follows vowels.** Lip sync uses 5 mouth shapes A, I, U, E, O following each word's
+  vowel order — "aku mau makan" → A U A U A A — and closes on pauses. Foreign words are read by
+  their pronunciation via `pronunciation` (`references/karakter.md`).
+- **Characters never block the camera.** When focusing on an illustration, characters either
+  vanish instantly (`hide`, for cuts) or slide straight out to the side before the camera moves
+  (`slide`, for moves) — no turning around, no walking in front of the camera. For variety (only
+  when needed) a character may pop in from below, the side, or above via `enter`.
 - **One idea per moment.** The top area (y 230–900 px) holds one main thing at a time: a UI panel
   *or* a large 3D prop. Clear the previous scene's elements.
 - **Context-fitting yet original characters.** The pixel-skin host is built from a spec (preset +

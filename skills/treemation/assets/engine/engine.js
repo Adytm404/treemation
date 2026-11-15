@@ -180,7 +180,7 @@ function buildHost(c) {
   host.face = ({ e, open, blink, expr, pose, viseme }) => {
     host.brows[0].g.position.y = 1.58 + e.bl; host.brows[1].g.position.y = 1.58 + e.br;
     host.brows[0].g.rotation.z = -e.bl * .6 + (expr === 'worried' ? -.25 : 0); host.brows[1].g.rotation.z = e.br * .6 + (expr === 'worried' ? .25 : 0);
-    if (viseme) { const V = { A: [.56, .42, .9], I: [.78, .13, .3], E: [.66, .24, .6], O: [.3, .32, .5], '-': [.5 + .14 * e.sm, .09, 0] }[viseme] || [.5, .09, 0]; open = V[2]; host.mouth.scale.set(V[0], V[1], .04); host.mouth.position.y = -V[1] * .35; }
+    if (viseme) { const V = { A: [.56, .42, .9], I: [.78, .13, .3], U: [.2, .2, .35], E: [.66, .24, .6], O: [.34, .34, .55], '-': [.5 + .14 * e.sm, .09, 0] }[viseme] || [.5, .09, 0]; open = V[2]; host.mouth.scale.set(V[0], V[1], .04); host.mouth.position.y = -V[1] * .35; }
     else { host.mouth.scale.set(.5 + .14 * e.sm + open * .1, .09 + open * .34, .04); host.mouth.position.y = -open * .14; }
     host.teeth.visible = open > .25; host.teeth.position.y = .02 - open * .02; host.teeth.scale.x = .42 + open * .1;
     host.corners.forEach((c, j) => { c.visible = e.sm > .3; c.position.set((j ? 1 : -1) * (.3 + open * .05), .04, 0); });
@@ -420,7 +420,7 @@ function buildShots() {
   for (const s of TL.scenes) for (const k of s.shots || []) {
     if (!SHOTS[k.shot]) console.warn('shot tidak dikenal: ' + k.shot);
     const [kind, dur] = (k.transition || 'cut').split(':');
-    K.push({ t: k.start, shot: k.shot, kind, dur: dur ? +dur : SHOT_MOVE });
+    K.push({ t: k.start, shot: k.shot, kind, dur: dur ? +dur : SHOT_MOVE, chars: k.chars || null });
   }
   K.sort((a, b) => a.t - b.t);
   if (!K.length || K[0].t > .01) K.unshift({ t: 0, shot: 'wide', kind: 'cut', dur: 0 });
@@ -440,25 +440,50 @@ function cameraAt(t, KS) {
   const dist = _a.distanceTo(_c), sway = CAM.drift * dist / 24;
   return { x: _a.x + Math.sin(t * .35) * sway, y: _a.y + Math.sin(t * .27 + 1) * sway * .4, z: _a.z, lx: _c.x + Math.sin(t * .35) * sway * .4, ly: _c.y, lz: _c.z, fov, shot: k.shot };
 }
-/** 0 = karakter di tempat, 1 = sudah minggir keluar bingkai (untuk shot hideChars).
- *  Mulai jalan 0,35 dtk sebelum shot supaya sudah keluar saat kamera tiba; kembali saat shot berganti. */
+/** Karakter keluar bingkai untuk shot hideChars (illustration) — TIDAK BOLEH menghalangi kamera.
+ *  mode 'slide': geser lurus ke samping (tetap menghadap kamera, tanpa balik badan), selesai SEBELUM
+ *               kamera mulai bergerak; kembali setelah kamera hampir tiba di shot berikutnya.
+ *  mode 'hide' : langsung hilang tepat saat shot mulai (cocok dengan transisi 'cut'), langsung muncul lagi.
+ *  Mengembalikan { k: 0 (di tempat) … 1 (di luar bingkai), mode }. */
+const EXIT_DEFAULT = () => TL.character_exit || 'slide';
 function asideAt(t, KS) {
-  let v = 0;
+  let best = { k: 0, mode: 'slide' };
   for (let i = 0; i < KS.length; i++) {
     if (!(SHOTS[KS[i].shot] || {}).hideChars) continue;
-    const a = KS[i].t, b = i + 1 < KS.length ? KS[i + 1].t : 1e9;
-    if ((SHOTS[KS[i - 1]?.shot] || {}).hideChars) continue;          // lanjutan, sudah minggir
+    if ((SHOTS[KS[i - 1]?.shot] || {}).hideChars) continue;          // lanjutan, sudah di luar
     let j = i; while (j + 1 < KS.length && (SHOTS[KS[j + 1].shot] || {}).hideChars) j++;
-    const end = j + 1 < KS.length ? KS[j + 1].t : 1e9;
-    v = Math.max(v, Math.min(inOut(P(t, a - .35, .75)), 1 - inOut(P(t, end - .05, .8))));
+    const a = KS[i].t, nx = KS[j + 1], end = nx ? nx.t : 1e9;
+    const mode = KS[i].chars || (KS[i].kind === 'cut' ? 'hide' : EXIT_DEFAULT());
+    let k;
+    if (mode === 'hide') k = (t >= a && t < end) ? 1 : 0;
+    else {
+      const back = nx ? end + (nx.kind === 'move' ? nx.dur * .5 : 0) : 1e9;
+      k = Math.min(inOut(P(t, a - .45, .4)), 1 - inOut(P(t, back, .4)));
+    }
+    if (k > best.k) best = { k, mode };
   }
-  return v;
+  return best;
+}
+/** Kemunculan tiba-tiba untuk variasi: plan.json scene.enter = [[kata, 'host'|'mascot'|'both', 'bottom'|'side'|'top']].
+ *  Karakter berada di luar bingkai tepat pada kata itu lalu masuk dalam ±0,5 dtk. */
+function buildEnters() { const E = []; for (const s of TL.scenes) for (const e of s.enter || []) E.push(e); return E.sort((a, b) => a.start - b.start); }
+const bounceOut = x => { const n = 7.5625, d = 2.75; if (x < 1 / d) return n * x * x; if (x < 2 / d) return n * (x -= 1.5 / d) * x + .75; if (x < 2.5 / d) return n * (x -= 2.25 / d) * x + .9375; return n * (x -= 2.625 / d) * x + .984375; };
+function enterOffset(t, who, E) {
+  for (const e of E) {
+    if (e.who !== who && e.who !== 'both') continue;
+    if (t < e.start - .02 || t > e.start + .7) continue;
+    const p = P(t, e.start, e.from === 'top' ? .7 : .5), side = who === 'host' ? -1 : 1;
+    if (e.from === 'bottom') return { x: 0, y: -9 * (1 - backOut(p)) };
+    if (e.from === 'top') return { x: 0, y: 12 * (1 - bounceOut(p)) };
+    return { x: side * 6.5 * (1 - easeOut(p)), y: 0 };      // 'side'
+  }
+  return { x: 0, y: 0 };
 }
 function keyAt(keys, t) { let i = 0; while (i + 1 < keys.length && keys[i + 1][0] <= t) i++; return i; }
 function pose(name, lt) { const base = { Lz: -.1, Lx: 0, Rz: .1, Rx: 0, tilt: 0, body: 0 }; return Object.assign(base, (POSES[name] || POSES.idle)(lt, Math.sin(lt * 5))); }
 
 /* ---------- register + frame loop ---------- */
-let DEF = null, HK = [], MK = [], KS = [], BG = [], THUMB_BG = null, HOOK_Y = 300;
+let DEF = null, HK = [], MK = [], KS = [], BG = [], THUMB_BG = null, HOOK_Y = 300, EN = [];
 /** waktu acuan props untuk thumbnail: thumbnail.props_from = {scene, word} atau {time} */
 function thumbTime(th) {
   const pf = th.props_from || {};
@@ -481,7 +506,7 @@ export function register(def) {
   const mascotSpec = { ...DEFAULT_LOOK.mascot, pixel: hostSpec.style === 'pixel', ...(TL.characters?.mascot?.spec || {}), ...(def.look?.mascot || {}) };
   if (hostSpec.style === 'classic') buildHost({ ...DEFAULT_LOOK.classic, ...hostSpec }); else buildPixel(hostSpec);
   buildMascot(mascotSpec);
-  [HK, MK] = buildKeys(); KS = buildShots();
+  [HK, MK] = buildKeys(); KS = buildShots(); EN = buildEnters();
   def.setup?.();
   BG = buildBackground();
   if (TL.thumbnail) { const th = TL.thumbnail, tt = thumbTime(th); let i = 0; while (i + 1 < BG.length && BG[i + 1].t <= tt) i++;
@@ -533,8 +558,9 @@ window.renderFrame = (frame) => {
   // latar adaptif
   drawBackground(t, BG, cam, TH ? THUMB_BG : null);
   // karakter minggir untuk shot ilustrasi
-  const aside = TH ? 0 : asideAt(t, KS), walking = Math.sin(Math.PI * aside), stepBob = Math.abs(Math.sin(t * 11)) * .22 * walking;
-  const leaving = asideAt(t + .05, KS) >= aside;   // true = sedang keluar, false = sedang kembali
+  const AS = TH ? { k: 0, mode: 'slide' } : asideAt(t, KS), aside = AS.k, sliding = Math.sin(Math.PI * aside);
+  const hiddenChars = AS.mode === 'hide' && aside > .5;
+  const enH = TH ? { x: 0, y: 0 } : enterOffset(t, 'host', EN), enM = TH ? { x: 0, y: 0 } : enterOffset(t, 'mascot', EN);
   // host
   const HKu = TH ? [[t - .6, TH.host?.pose || 'point_up', TH.host?.expression || 'wow']] : HK;
   const MKu = TH ? [[t - Math.PI / 8.8, TH.mascot?.action || 'jump', TH.mascot?.eyes || 'happy']] : MK;
@@ -542,11 +568,12 @@ window.renderFrame = (frame) => {
     const a = pose(pk[1], t - pk[0]), b = pose(k[1], t - k[0]); const p = {}; for (const f in a) p[f] = lerp(a[f], b[f], bl);
     const ea = EXPR[pk[2]] || EXPR.talk, eb = EXPR[k[2]] || EXPR.talk; const e = {}; for (const f in ea) e[f] = lerp(ea[f], eb[f], bl);
     const br = Math.sin(t * 2.2) * .03;
-    const swing = Math.sin(t * 11) * .7 * Math.min(1, walking * 2);
-    host.arms.L.rotation.set(p.Lx + swing * (1 - Math.min(1, Math.abs(p.Lx) + Math.abs(p.Lz + .1))), 0, p.Lz + br); host.arms.R.rotation.set(p.Rx - swing * (1 - Math.min(1, Math.abs(p.Rx) + Math.abs(p.Rz - .1))), 0, p.Rz - br);
-    host.legs.forEach((l, j) => l.rotation.x = (j ? -1 : 1) * swing);
-    host.body.position.y = host.bodyY + br * .6 + p.body; host.body.rotation.z = Math.sin(t * .8) * .015 + walking * .08;
-    host.root.position.set(lerp(-1.75, -7.5, aside), stepBob, .6); host.root.rotation.y = lerp(.2, leaving ? -1.25 : 1.25, Math.min(1, walking * 1.6));
+    host.arms.L.rotation.set(p.Lx, 0, p.Lz + br); host.arms.R.rotation.set(p.Rx, 0, p.Rz - br);
+    host.legs.forEach(l => l.rotation.x = 0);
+    host.body.position.y = host.bodyY + br * .6 + p.body; host.body.rotation.z = Math.sin(t * .8) * .015 + sliding * .06;
+    // geser lurus ke kiri (menghadap kamera terus) atau hilang; plus efek muncul tiba-tiba
+    host.root.visible = !hiddenChars;
+    host.root.position.set(-1.75 - (AS.mode === 'slide' ? inOut(aside) * 6.5 : 0) + enH.x, enH.y, .6); host.root.rotation.y = .2;
     host.head.rotation.set(-mouth * .07 + Math.sin(t * 1.3) * .03, Math.sin(t * .6) * .08, p.tilt * .5 + e.tilt * .3 + Math.sin(t * .9) * .02);
     const open = clamp(mouth * 1.15);
     const bt = t % 3.3; const blink = !TH && ((bt > 3.1 && bt < 3.22) || (t % 7.1 > 6.95 && t % 7.1 < 7.05));
@@ -562,7 +589,8 @@ window.renderFrame = (frame) => {
       case 'look': ry = -.35 + Math.sin(t * 1.2) * .25; break;
       default: rz = Math.sin(t * 1.1) * .03;
     }
-    mascot.root.position.set(x + aside * 5.2, y + stepBob * 1.3, 1.4); mascot.root.rotation.set(0, lerp(ry, leaving ? 1.2 : -1.6, Math.min(1, walking * 1.6)), rz); mascot.body.scale.set(1 + (1 - sq) * .6, sq, 1 + (1 - sq) * .6);
+    mascot.root.visible = !hiddenChars;
+    mascot.root.position.set(x + (AS.mode === 'slide' ? inOut(aside) * 5.5 : 0) + enM.x, y + enM.y, 1.4); mascot.root.rotation.set(0, ry, rz - sliding * .08); mascot.body.scale.set(1 + (1 - sq) * .6, sq, 1 + (1 - sq) * .6);
     mascot.hands.forEach((h, j) => h.rotation.z = (j ? -1 : 1) * (k[1] === 'jump' || k[1] === 'bounce' ? .5 + Math.sin(t * 8) * .3 : .05));
     const blink = !TH && (t % 4.1 > 3.95) && (k[2] === 'normal' || k[2] === 'wow');
     mascot.eyes.material.map = blink ? mascot.eyeTex.blink : (mascot.eyeTex[k[2]] || mascot.eyeTex.normal);

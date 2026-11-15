@@ -33,13 +33,16 @@ def make_sfx(tl, path):
         for i in range(12):
             c = noise(.025, 2000, 8000, .35, False); o = int((i * .075 + rng.random() * .01) * SR); s[o:o + len(c)] += c
         return s
+    def coin():
+        out_ = np.zeros(int(SR * .6)); a = tone(988, 988, .08, .05, .4); b = tone(1318, 1318, .5, .15, .4)
+        out_[:len(a)] += a; o = int(SR * .08); out_[o:o + len(b)] += b[:len(out_) - o]; return out_
     LIB = {"pop": lambda: tone(900, 320, .12, .04, .9), "whoosh": lambda: noise(.32, 600, 5000, .5),
            "ding": lambda: tone(1318, 1318, .9, .25, .5) + tone(1976, 1976, .9, .18, .25), "success_chime": chime,
            "typing": typing, "buzz": lambda: tone(140, 110, .35, .3, .35, True),
            "rise_hum": lambda: tone(90, 180, .7, .6, .35) + noise(.7, 200, 1200, .15),
            "multiply_swell": lambda: noise(.9, 300, 3000, .45) + tone(220, 440, .9, .8, .15),
            "scratch": lambda: noise(.25, 800, 3000, .45, False), "tick": lambda: tone(1500, 1500, .06, .02, .4),
-           "boing": lambda: tone(200, 600, .35, .15, .5), "coin": lambda: (lambda a, b: np.pad(a, (0, len(b) - len(a))) + b)(tone(988, 988, .08, .05, .4), np.pad(tone(1318, 1318, .5, .15, .4), (int(SR * .08), 0))[:int(SR * .5)])}
+           "boing": lambda: tone(200, 600, .35, .15, .5), "coin": coin}
 
     def add(x, t):
         o = int(max(0, t) * SR); x = x[:len(out) - o]; out[o:o + len(x)] += x
