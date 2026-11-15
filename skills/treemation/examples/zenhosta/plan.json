@@ -1,0 +1,977 @@
+{
+  "title": "Kok Website Bisa Online? Domain, Server, Data Center & Hosting",
+  "fps": 30,
+  "tail_hold": 1.0,
+  "phrases": [
+    [
+      "zenhosta dot com",
+      "zenhosta.com"
+    ],
+    [
+      "dua puluh empat jam",
+      "24 jam"
+    ],
+    [
+      "data center",
+      "data center"
+    ],
+    [
+      "IP address",
+      "IP address"
+    ]
+  ],
+  "keywords": [
+    "domain",
+    "server",
+    "data center",
+    "hosting",
+    "zenhosta.com",
+    "ip address",
+    "24 jam",
+    "online",
+    "alamat",
+    "sewa",
+    "upload",
+    "empat"
+  ],
+  "syllable_overrides": {
+    "zenhosta": 3
+  },
+  "hook": {
+    "type": "pertanyaan_penasaran",
+    "text": [
+      "Kok website",
+      "bisa *online?*"
+    ],
+    "until": "online",
+    "alternatives": [
+      {
+        "type": "apa_jadinya_kalau",
+        "narration": "Bayangin kalau buka website harus hafal deretan angka kayak gini.",
+        "text": [
+          "Hafal *angka* ini?"
+        ],
+        "visual": "illustration: angka IP raksasa berjatuhan, maskot pusing"
+      },
+      {
+        "type": "hasil_dulu",
+        "narration": "Ini yang terjadi sedetik setelah kamu tekan Enter.",
+        "text": [
+          "1 detik di *internet*"
+        ],
+        "visual": "low_angle: kamera melesat dari HP ke gedung data center"
+      }
+    ]
+  },
+  "characters": {
+    "host": {
+      "spec": {
+        "preset": "raka"
+      },
+      "look": "karakter blok gaya pixel-skin: rambut hitam acak-acakan, kacamata, hoodie tosca, celana abu, sepatu putih"
+    },
+    "mascot": {
+      "name": "Byte",
+      "look": "kotak voxel biru muda berbentuk server mini, lampu LED di dahi, mata piksel ekspresif"
+    }
+  },
+  "scenes": [
+    {
+      "id": "s1_hook",
+      "label": [
+        "KOK BISA",
+        "ONLINE?"
+      ],
+      "step": null,
+      "narration": "Pernah penasaran, kenapa website bisa online dan dibuka dari mana aja?",
+      "camera": "Medium shot host kiri bawah, maskot kanan bawah. Panel browser kiri atas, bola dunia di panggung.",
+      "shots": [
+        [
+          "@start",
+          "host_close",
+          "cut"
+        ],
+        [
+          "dari",
+          "wide",
+          "move"
+        ]
+      ],
+      "background": {
+        "theme": "night_blue",
+        "pattern": "bokeh",
+        "motif": [
+          "globe",
+          "wifi",
+          "circle-help",
+          "monitor"
+        ]
+      },
+      "host": {
+        "expression": "curious",
+        "gestures": [
+          [
+            "Pernah",
+            "scratch",
+            "curious"
+          ],
+          [
+            "online",
+            "point_up",
+            "happy"
+          ],
+          [
+            "dari",
+            "spread",
+            "happy"
+          ]
+        ]
+      },
+      "mascot": {
+        "action": "tilt",
+        "eyes": "question"
+      },
+      "visuals": [
+        {
+          "type": "browser",
+          "content": "Jendela browser, spinner loading",
+          "trigger": "website"
+        },
+        {
+          "type": "state_change",
+          "content": "Spinner berubah jadi halaman website + chip Online",
+          "trigger": "online"
+        },
+        {
+          "type": "prop_globe",
+          "content": "Bola dunia voxel di panggung, titik kota menyala",
+          "trigger": "dari"
+        }
+      ],
+      "sfx": [
+        [
+          "Pernah",
+          "whoosh_in"
+        ],
+        [
+          "online",
+          "ding"
+        ]
+      ]
+    },
+    {
+      "id": "s2_intro",
+      "label": [
+        "ADA",
+        "4 KOMPONEN"
+      ],
+      "step": 0,
+      "dashes_from": "bahas",
+      "narration": "Ternyata ada empat hal penting di baliknya. Yuk, kita bahas!",
+      "camera": "Sama; 4 kartu ikon 2x2 di area atas.",
+      "shots": [
+        [
+          "@start",
+          "wide",
+          "cut"
+        ],
+        [
+          "Yuk",
+          "host_medium",
+          "move"
+        ]
+      ],
+      "background": {
+        "theme": "grape",
+        "pattern": "bokeh",
+        "motif": [
+          "globe",
+          "server",
+          "building-2",
+          "cloud"
+        ]
+      },
+      "host": {
+        "expression": "happy",
+        "gestures": [
+          [
+            "empat",
+            "count",
+            "happy"
+          ],
+          [
+            "Yuk",
+            "thumbs",
+            "happy"
+          ]
+        ]
+      },
+      "mascot": {
+        "action": "bounce",
+        "eyes": "happy"
+      },
+      "visuals": [
+        {
+          "type": "icon_cards",
+          "content": [
+            "Domain|globe",
+            "Server|server",
+            "Data Center|building-2",
+            "Hosting|cloud"
+          ],
+          "trigger": "empat"
+        },
+        {
+          "type": "transition",
+          "content": "Kartu mengecil terbang ke garis progres",
+          "trigger": "bahas"
+        }
+      ],
+      "sfx": [
+        [
+          "empat",
+          "pop_x4"
+        ],
+        [
+          "bahas",
+          "whoosh"
+        ]
+      ]
+    },
+    {
+      "id": "s3_domain",
+      "label": [
+        "LANGKAH 1 ·",
+        "DOMAIN"
+      ],
+      "step": 1,
+      "narration": "Pertama, domain. Domain itu alamat website kamu, contohnya zenhosta dot com. Tanpa domain, kita harus hafal deretan angka IP address. Ribet, kan?",
+      "camera": "Rumah voxel di panggung, lalu panel angka IP.",
+      "shots": [
+        [
+          "@start",
+          "host_medium",
+          "cut"
+        ],
+        [
+          "alamat",
+          "illustration",
+          "move"
+        ],
+        [
+          "Tanpa",
+          "wide",
+          "move"
+        ],
+        [
+          "deretan",
+          "mascot_close",
+          "cut"
+        ],
+        [
+          "Ribet",
+          "host_medium",
+          "move:0.5"
+        ]
+      ],
+      "background": {
+        "theme": "ocean",
+        "pattern": "bubbles",
+        "motif": [
+          "house",
+          "map-pin",
+          "link",
+          "globe"
+        ]
+      },
+      "host": {
+        "expression": "talk",
+        "gestures": [
+          [
+            "Pertama",
+            "point_panel",
+            "talk"
+          ],
+          [
+            "alamat",
+            "present",
+            "talk"
+          ],
+          [
+            "zenhosta.com",
+            "point_panel",
+            "happy"
+          ],
+          [
+            "Tanpa",
+            "idle",
+            "talk"
+          ],
+          [
+            "deretan",
+            "shrug",
+            "worried"
+          ],
+          [
+            "Ribet",
+            "idle",
+            "smirk"
+          ]
+        ]
+      },
+      "mascot": {
+        "action": "idle",
+        "eyes": "normal",
+        "changes": [
+          [
+            "deretan",
+            "shiver",
+            "dizzy"
+          ]
+        ]
+      },
+      "visuals": [
+        {
+          "type": "prop_house",
+          "content": "Rumah voxel dengan papan zenhosta.com",
+          "trigger": "alamat"
+        },
+        {
+          "type": "urlbar",
+          "content": "zenhosta.com diketik",
+          "trigger": "zenhosta.com"
+        },
+        {
+          "type": "bignum",
+          "content": "203.0.113.10",
+          "trigger": "IP address"
+        },
+        {
+          "type": "orbit_texts",
+          "content": "Angka mengitari maskot",
+          "trigger": "deretan"
+        },
+        {
+          "type": "xstamp",
+          "content": "Silang merah di angka IP",
+          "trigger": "Ribet"
+        }
+      ],
+      "sfx": [
+        [
+          "Pertama",
+          "whoosh_label"
+        ],
+        [
+          "zenhosta.com",
+          "typing"
+        ],
+        [
+          "Ribet",
+          "buzz"
+        ]
+      ]
+    },
+    {
+      "id": "s4_server",
+      "label": [
+        "LANGKAH 2 ·",
+        "SERVER"
+      ],
+      "step": 2,
+      "narration": "Kedua, server. Server adalah komputer yang menyimpan semua file website kamu, dan menyala dua puluh empat jam, supaya website bisa dibuka kapan aja.",
+      "camera": "Rak server naik di panggung.",
+      "shots": [
+        [
+          "@start",
+          "illustration",
+          "cut"
+        ],
+        [
+          "supaya",
+          "wide",
+          "move"
+        ]
+      ],
+      "background": {
+        "theme": "tech_dark",
+        "pattern": "code",
+        "motif": [
+          "server",
+          "hard-drive",
+          "cpu",
+          "database"
+        ]
+      },
+      "host": {
+        "expression": "talk",
+        "gestures": [
+          [
+            "Kedua",
+            "point_panel",
+            "talk"
+          ],
+          [
+            "file",
+            "present",
+            "talk"
+          ],
+          [
+            "24 jam",
+            "count",
+            "happy"
+          ],
+          [
+            "supaya",
+            "idle",
+            "happy"
+          ]
+        ]
+      },
+      "mascot": {
+        "action": "look",
+        "eyes": "normal",
+        "changes": [
+          [
+            "file",
+            "bounce",
+            "happy"
+          ],
+          [
+            "supaya",
+            "idle",
+            "normal"
+          ]
+        ]
+      },
+      "visuals": [
+        {
+          "type": "prop_rack",
+          "content": "Rak server naik dari panggung",
+          "trigger": "server"
+        },
+        {
+          "type": "file_chips",
+          "content": [
+            "index.html",
+            "style.css",
+            "foto.jpg"
+          ],
+          "trigger": "file"
+        },
+        {
+          "type": "badge",
+          "content": "24/7 selalu menyala",
+          "trigger": "24 jam"
+        },
+        {
+          "type": "bubbles",
+          "content": "Matahari dan bulan bergantian",
+          "trigger": "kapan"
+        }
+      ],
+      "sfx": [
+        [
+          "Kedua",
+          "whoosh_label"
+        ],
+        [
+          "server",
+          "rise_hum"
+        ],
+        [
+          "file",
+          "pop_x3"
+        ]
+      ]
+    },
+    {
+      "id": "s5_datacenter",
+      "label": [
+        "LANGKAH 3 ·",
+        "DATA CENTER"
+      ],
+      "step": 3,
+      "narration": "Ketiga, data center. Ini gedung khusus tempat ribuan server tinggal, lengkap dengan pendingin, listrik cadangan, dan internet super cepat.",
+      "camera": "Rak berubah jadi gedung data center berisi barisan rak; kamera mundur sedikit.",
+      "shots": [
+        [
+          "@start",
+          "wide",
+          "cut"
+        ],
+        [
+          "ribuan",
+          "illustration",
+          "move"
+        ],
+        [
+          "pendingin",
+          "mascot_close",
+          "cut"
+        ],
+        [
+          "internet",
+          "wide_far",
+          "move"
+        ]
+      ],
+      "background": {
+        "theme": "arctic",
+        "pattern": "snow",
+        "motif": [
+          "snowflake",
+          "zap",
+          "building-2",
+          "network"
+        ]
+      },
+      "host": {
+        "expression": "wow",
+        "gestures": [
+          [
+            "Ketiga",
+            "point_panel",
+            "wow"
+          ],
+          [
+            "gedung",
+            "spread",
+            "wow"
+          ],
+          [
+            "lengkap",
+            "idle",
+            "talk"
+          ],
+          [
+            "internet",
+            "point_up",
+            "happy"
+          ]
+        ]
+      },
+      "mascot": {
+        "action": "look",
+        "eyes": "wow",
+        "changes": [
+          [
+            "pendingin",
+            "shiver",
+            "cold"
+          ],
+          [
+            "listrik",
+            "look",
+            "wow"
+          ]
+        ]
+      },
+      "visuals": [
+        {
+          "type": "prop_datacenter",
+          "content": "Gedung dengan barisan rak",
+          "trigger": "ribuan"
+        },
+        {
+          "type": "chips",
+          "content": [
+            "Pendingin|snowflake",
+            "Listrik cadangan|zap",
+            "Internet super cepat|rocket"
+          ],
+          "triggers": [
+            "pendingin",
+            "listrik",
+            "internet"
+          ]
+        },
+        {
+          "type": "fx_snow",
+          "content": "Partikel dingin",
+          "trigger": "pendingin"
+        },
+        {
+          "type": "fx_streaks",
+          "content": "Garis cahaya fiber",
+          "trigger": "internet"
+        }
+      ],
+      "sfx": [
+        [
+          "Ketiga",
+          "whoosh_label"
+        ],
+        [
+          "ribuan",
+          "multiply_swell"
+        ],
+        [
+          "pendingin",
+          "pop"
+        ],
+        [
+          "listrik",
+          "pop"
+        ],
+        [
+          "internet",
+          "pop"
+        ]
+      ]
+    },
+    {
+      "id": "s6_hosting",
+      "label": [
+        "LANGKAH 4 ·",
+        "HOSTING"
+      ],
+      "step": 4,
+      "narration": "Terakhir, hosting. Hosting itu layanan sewa tempat di server. Jadi kamu nggak perlu beli server sendiri. Cukup sewa, upload website, dan langsung online!",
+      "camera": "Kembali ke satu rak, satu slot menyala.",
+      "shots": [
+        [
+          "@start",
+          "host_medium",
+          "cut"
+        ],
+        [
+          "sewa",
+          "illustration",
+          "move"
+        ],
+        [
+          "Cukup",
+          "wide",
+          "move"
+        ],
+        [
+          "online",
+          "low_angle",
+          "cut"
+        ]
+      ],
+      "background": {
+        "theme": "mint",
+        "pattern": "bokeh",
+        "motif": [
+          "key-round",
+          "cloud",
+          "upload",
+          "check"
+        ]
+      },
+      "host": {
+        "expression": "talk",
+        "gestures": [
+          [
+            "Terakhir",
+            "point_panel",
+            "talk"
+          ],
+          [
+            "sewa",
+            "hold",
+            "talk"
+          ],
+          [
+            "beli",
+            "shake",
+            "talk"
+          ],
+          [
+            "Cukup",
+            "count",
+            "happy"
+          ],
+          [
+            "online",
+            "celebrate",
+            "happy"
+          ]
+        ]
+      },
+      "mascot": {
+        "action": "idle",
+        "eyes": "normal",
+        "changes": [
+          [
+            "online",
+            "jump",
+            "happy"
+          ]
+        ]
+      },
+      "visuals": [
+        {
+          "type": "slot_tag",
+          "content": "Slot rak menyala + tag Tempat kamu",
+          "trigger": "sewa"
+        },
+        {
+          "type": "note_strike",
+          "content": "Beli server sendiri — mahal & ribet (dicoret)",
+          "trigger": "beli"
+        },
+        {
+          "type": "pills",
+          "content": [
+            "Sewa",
+            "Upload",
+            "Online ✓"
+          ],
+          "triggers": [
+            "Cukup",
+            "upload",
+            "online"
+          ]
+        },
+        {
+          "type": "okbadge",
+          "content": "ONLINE + confetti",
+          "trigger": "online"
+        }
+      ],
+      "sfx": [
+        [
+          "Terakhir",
+          "whoosh_label"
+        ],
+        [
+          "beli",
+          "scratch"
+        ],
+        [
+          "upload",
+          "pop"
+        ],
+        [
+          "online",
+          "success_chime"
+        ]
+      ]
+    },
+    {
+      "id": "s7_recap",
+      "label": [
+        "JADI",
+        "BEGINI ALURNYA"
+      ],
+      "step": 4,
+      "narration": "Jadi, saat kamu ketik domain, internet mencari server-nya, lalu server di data center mengirim website ke layar kamu.",
+      "camera": "Diagram alur vertikal di area atas.",
+      "shots": [
+        [
+          "@start",
+          "wide",
+          "cut"
+        ],
+        [
+          "layar",
+          "host_close",
+          "move:0.5"
+        ]
+      ],
+      "background": {
+        "theme": "night_blue",
+        "pattern": "stars",
+        "motif": [
+          "smartphone",
+          "search",
+          "server",
+          "monitor"
+        ]
+      },
+      "host": {
+        "expression": "talk",
+        "gestures": [
+          [
+            "Jadi",
+            "point_up",
+            "talk"
+          ],
+          [
+            "internet",
+            "point_panel",
+            "talk"
+          ],
+          [
+            "layar",
+            "point_viewer",
+            "happy"
+          ]
+        ]
+      },
+      "mascot": {
+        "action": "look",
+        "eyes": "normal",
+        "changes": [
+          [
+            "layar",
+            "bounce",
+            "happy"
+          ]
+        ]
+      },
+      "visuals": [
+        {
+          "type": "flow",
+          "content": [
+            "Kamu ketik zenhosta.com",
+            "Internet cari alamat server",
+            "Server di data center",
+            "Website tampil"
+          ],
+          "triggers": [
+            "domain",
+            "mencari",
+            "data center",
+            "layar"
+          ]
+        }
+      ],
+      "sfx": [
+        [
+          "domain",
+          "tick"
+        ],
+        [
+          "mencari",
+          "tick"
+        ],
+        [
+          "data center",
+          "tick"
+        ],
+        [
+          "layar",
+          "ding"
+        ]
+      ]
+    },
+    {
+      "id": "s8_cta",
+      "label": [
+        "WEBSITE KAMU",
+        "ONLINE"
+      ],
+      "step": 4,
+      "narration": "Mau website kamu online juga? Cari hosting di zenhosta dot com, sekarang!",
+      "camera": "Kartu CTA besar di area atas.",
+      "shots": [
+        [
+          "@start",
+          "host_medium",
+          "cut"
+        ],
+        [
+          "zenhosta.com",
+          "wide",
+          "move"
+        ],
+        [
+          "sekarang",
+          "low_angle",
+          "cut"
+        ]
+      ],
+      "background": {
+        "theme": "sunset",
+        "pattern": "bokeh",
+        "motif": [
+          "rocket",
+          "sparkles",
+          "globe"
+        ]
+      },
+      "host": {
+        "expression": "happy",
+        "gestures": [
+          [
+            "Mau",
+            "point_viewer",
+            "happy"
+          ],
+          [
+            "zenhosta.com",
+            "point_up",
+            "happy"
+          ],
+          [
+            "sekarang",
+            "celebrate",
+            "happy"
+          ]
+        ]
+      },
+      "mascot": {
+        "action": "bounce",
+        "eyes": "happy",
+        "changes": [
+          [
+            "sekarang",
+            "jump",
+            "happy"
+          ]
+        ]
+      },
+      "visuals": [
+        {
+          "type": "cta",
+          "content": "zenhosta.com + tombol Mulai hosting",
+          "trigger": "zenhosta.com"
+        }
+      ],
+      "sfx": [
+        [
+          "zenhosta.com",
+          "whoosh_in"
+        ],
+        [
+          "sekarang",
+          "success_chime"
+        ]
+      ]
+    }
+  ],
+  "thumbnail": {
+    "title": [
+      "Kok website",
+      "bisa *online?*"
+    ],
+    "subtitle": "Domain, server & hosting dalam 1 menit",
+    "badge": "4 HAL PENTING",
+    "badge_icon": "sparkles",
+    "footer": "zenhosta.com",
+    "footer_icon": "globe",
+    "props_from": {
+      "scene": "s5_datacenter",
+      "word": "pendingin"
+    },
+    "background": {
+      "theme": "grape",
+      "pattern": "bokeh",
+      "motif": [
+        "globe",
+        "server",
+        "cloud",
+        "wifi"
+      ]
+    },
+    "host": {
+      "pose": "point_up",
+      "expression": "wow",
+      "mouth": 0.6
+    },
+    "mascot": {
+      "action": "jump",
+      "eyes": "wow"
+    },
+    "sticker": {
+      "icon": "wifi",
+      "x": 800,
+      "y": 820,
+      "color": "#34D399"
+    }
+  }
+}
