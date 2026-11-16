@@ -26,6 +26,9 @@ Urutan tetap:
    warna merek).
 6. **Metafora & ending** (1 kalimat): adegan metafora visualnya apa, dan bahwa akhir video
    menyambung ke frame pertama supaya penonton menonton ulang.
+6a. **Set 3D** (hanya kalau ada, 1 kalimat): tempat apa yang dibangun di belakang host, di langkah
+   mana, dan bagian yang dikunjungi kamera (mis. "Langkah 3 memakai set ruang data center: host melayang
+   di depannya, lalu kamera menyusuri lorong rak, ke pendingin, UPS, dan kabel data").
 6b. **Thumbnail** (1–2 kalimat): teks judul cover (tulis persis, huruf kuning ditandai), props
    yang dipamerkan, dan ekspresi host. Gambarnya dibuat di Tahap 2.
 7. Tabel scene:
@@ -36,8 +39,9 @@ Urutan tetap:
 
    Tandai baris re-hook dengan "(re-hook)" di kolom Scene dan baris ajakan komentar.
    Waktu dari `video-plan.json` (format mm:ss). "Kamera" = urutan shot dalam bahasa sehari-hari
-   (close-up wajah, close-up maskot, fokus ilustrasi, wide, low angle). "Latar" = tema + pola dalam
-   bahasa sehari-hari (biru es + salju, gelap + kode biner). "Yang tampil" ≤ 15 kata.
+   (close-up wajah, close-up maskot, fokus ilustrasi, wide, low angle, masuk ruangan: lorong/pendingin).
+   "Latar" = tema + pola dalam bahasa sehari-hari (biru es + salju, gelap + kode biner), atau
+   "Set: ruang data center" saat set aktif. "Yang tampil" ≤ 15 kata.
 8. Satu paragraf: file `video-plan.json` berisi scene (label, shot kamera, latar, gerak host, maskot,
    visual, efek suara), caption dengan waktu per kata, dalam detik, mm:ss, dan nomor frame 30 fps.
 9. Dua catatan (prosa atau 2 poin): waktu masih perkiraan dan akan disesuaikan otomatis dari

@@ -33,6 +33,10 @@ All clips below were rendered by this skill (no video editor, no stock footage).
   </tr>
 </table>
 
+**3D sets** — when the script talks about a place, the whole room is built behind the host and the camera flies inside:
+
+<img src="docs/demo/set-datacenter.png" alt="Data center set: server aisle, then the camera moves into the cooling unit" width="480">
+
 **Character presets** (original pixel-skin designs, fully customizable — hair, hijab, outfit, colors, accessories):
 
 <img src="docs/demo/characters.png" alt="Eight pixel-skin character presets" width="720">
@@ -107,6 +111,7 @@ Generate the narration in ElevenLabs, then send the MP3. The agent processes it 
 | 👄 Vowel lip sync | Mouth shapes A · I · U · E · O follow each word's vowels and close on pauses; foreign words read by pronunciation |
 | 🎥 Clear camera | Characters vanish or slide straight out of frame before the camera focuses on props — never walking across the shot |
 | 🎨 Adaptive background | Theme, particles (bokeh, stars, bubbles, snow, binary code) and motif icons change per scene |
+| 🏙️ 3D sets | Whole places (data center, office, warehouse, city, or your own) built behind the host; the camera flies to the spot being mentioned |
 | 🪝 Hook rules | 3-layer hook (visual, voice, on-screen text) with an automatic lint before the script is sent |
 | 💬 Captions | Big word-by-word karaoke captions, keywords highlighted in yellow, zoom punch on key words |
 | 🎯 Precise timing | Optional Whisper word timestamps (`--whisper`) for exact caption and lip-sync timing |
@@ -152,7 +157,7 @@ skills/treemation/
 ├── SKILL.md
 ├── references/      # script & plan schema, hook research, characters, engine API, reply format
 ├── scripts/         # setup, timing, align, render, thumbnail, encode, character preview, project finder
-├── assets/engine/   # three.js engine, pixel-skin characters, page template
+├── assets/engine/   # three.js engine, pixel-skin characters, 3D set library, page template
 └── examples/        # a complete 69-second example (plan.json + scenes.js)
 ```
 

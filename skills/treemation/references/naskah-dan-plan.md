@@ -90,6 +90,10 @@ Aturan:
 - `loop_end` (disarankan `true`): ±0,8 dtk terakhir kamera & latar kembali ke komposisi frame
   pertama, sehingga putaran ulang terasa menyambung. Tulis juga kalimat penutup CTA yang enak
   disambung ke kalimat hook. Panel scene terakhir di `scenes.js` harus berakhir di `loopStart()`.
+- `set` (per scene, opsional): bangun **tempat** utuh sebagai set 3D di belakang host — host & maskot
+  melayang di depannya, kamera bisa masuk ke `spot:` di dalamnya. `{"name": "datacenter", "at": "kata",
+  "fx": [[kata, fx]], "mark": [[kata, spot, label, ikon]]}`. Set bawaan: `datacenter`, `office`,
+  `warehouse`, `city`; lainnya dibuat dengan `defineSet()`. Detail lengkap di `sets.md`. 1–2 set per video.
 - `render_style` (opsional): `{"outline": true, "glow": true, "blur_bg": true}` — garis tepi kartun,
   halo pada benda menyala, latar blur saat close-up. Semuanya default `true`.
 - `character_exit` (opsional, default `slide`): cara karakter keluar untuk shot `illustration`.
@@ -108,7 +112,7 @@ Aturan:
   terbesar. Pengantar biasanya `0` + `"dashes_from": "bahas"` supaya garis muncul saat kata itu.
 - `keywords`: kata/frasa (bentuk tampilan, huruf kecil) yang caption-nya kuning dan berdiri sendiri.
   Pilih 8–14: istilah inti, merek, angka penting. Terlalu banyak = tidak ada yang menonjol.
-- Semua kata pemicu (`shots`, `gestures`, `changes`, `trigger`, `triggers`, `sfx`, `dashes_from`) harus kata
+- Semua kata pemicu (`shots`, `gestures`, `changes`, `trigger`, `triggers`, `sfx`, `dashes_from`, dan `at`/`until`/`fx`/`mark` di `set`) harus kata
   yang benar-benar ada di narasi scene itu — bentuk tampilan (`zenhosta.com`) atau ucapan
   (`zenhosta`), tanpa tanda baca, tidak peka huruf besar. `@start` = awal scene.
 - `visuals` adalah rencana yang dibaca manusia dan dipakai saat menulis `scenes.js`; tipe bebas
@@ -128,6 +132,8 @@ Setiap scene punya daftar `[kata_pemicu, shot, transisi]`. Shot berlaku sampai s
 | `mascot_close` | maskot dekat, lengan host kadang masuk | reaksi lucu: pusing, kedinginan, kaget, senang |
 | `illustration` | props 3D di panggung memenuhi layar; host & maskot keluar bingkai dulu (lihat "Karakter keluar & muncul") lalu kembali saat shot berganti | saat props sedang dibahas (rumah, rak, gedung, globe) |
 | `low_angle` | dari bawah, heroik | momen sukses, "langsung online!", ajakan akhir |
+| `set_wide` / `set_host` / `set_low` | hanya saat `set` aktif: ruangan 3D luas dengan karakter melayang di depan | memperkenalkan tempat |
+| `spot:<nama>` | hanya saat `set` aktif: kamera di dalam ruangan menatap bagian tertentu (karakter keluar bingkai) | saat bagian tempat itu disebut (`sets.md`) |
 
 Transisi: `"cut"` (pindah langsung), `"move"` (kamera bergerak halus 0,7 dtk), atau
 `"move:1.2"` (durasi sendiri). `"@start"` = tepat di awal scene. Elemen ke-4 opsional untuk shot
@@ -190,6 +196,9 @@ naik), `snow` (salju turun), `code` (kolom angka biner jatuh), `none`.
 Motif (`motif`): 2–5 nama ikon lucide yang mewakili topik scene (mis. domain → `house`, `map-pin`,
 `link`; server → `server`, `cpu`, `hard-drive`; keamanan → `shield-check`, `lock`, `key-round`;
 uang → `wallet`, `coins`, `piggy-bank`). Ikon tampil samar di belakang, jadi aman dipakai banyak.
+
+Saat `set` aktif, partikel & motif latar memudar (ruangan menutupi layar) tapi tema tetap menentukan
+warna panel UI dan langit set `city`.
 
 Panduan memilih:
 - Cocokkan suasana dengan isi: dingin/pendingin → `arctic` + `snow`; teknis/server → `tech_dark` +

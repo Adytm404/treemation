@@ -493,40 +493,46 @@
       ],
       "step": 3,
       "narration": "Ketiga, data center. Ini gedung khusus tempat ribuan server tinggal, lengkap dengan pendingin, listrik cadangan, dan internet super cepat.",
-      "camera": "Rak berubah jadi gedung data center berisi barisan rak; kamera mundur sedikit.",
+      "camera": "Data center dibangun di belakang host; host melayang lalu kamera terbang menyusuri lorong rak, ke unit pendingin, lalu ke tray kabel data.",
       "shots": [
         [
           "@start",
-          "wide",
+          "host_medium",
           "cut"
         ],
         [
+          "Ini",
+          "set_wide",
+          "move:1.2"
+        ],
+        [
           "ribuan",
-          "illustration",
-          "move"
+          "spot:lorong",
+          "move:1.2"
         ],
         [
           "pendingin",
-          "mascot_close",
+          "spot:pendingin",
           "cut"
         ],
         [
           "internet",
-          "wide_far",
-          "move"
+          "spot:jaringan",
+          "move:1.0"
         ]
       ],
       "background": {
-        "theme": "arctic",
-        "pattern": "snow",
+        "theme": "tech_dark",
+        "pattern": "code",
         "motif": [
+          "server",
+          "cpu",
           "snowflake",
-          "zap",
-          "building-2",
           "network"
         ]
       },
       "host": {
+        "pose": "point_panel",
         "expression": "wow",
         "gestures": [
           [
@@ -538,16 +544,6 @@
             "gedung",
             "spread",
             "wow"
-          ],
-          [
-            "lengkap",
-            "idle",
-            "talk"
-          ],
-          [
-            "internet",
-            "point_up",
-            "happy"
           ]
         ]
       },
@@ -556,45 +552,17 @@
         "eyes": "wow",
         "changes": [
           [
-            "pendingin",
-            "shiver",
-            "cold"
-          ],
-          [
-            "listrik",
-            "look",
-            "wow"
+            "gedung",
+            "bounce",
+            "happy"
           ]
         ]
       },
       "visuals": [
         {
-          "type": "prop_datacenter",
-          "content": "Gedung dengan barisan rak",
-          "trigger": "ribuan"
-        },
-        {
-          "type": "chips",
-          "content": [
-            "Pendingin|snowflake",
-            "Listrik cadangan|zap",
-            "Internet super cepat|rocket"
-          ],
-          "triggers": [
-            "pendingin",
-            "listrik",
-            "internet"
-          ]
-        },
-        {
-          "type": "fx_snow",
-          "content": "Partikel dingin",
-          "trigger": "pendingin"
-        },
-        {
-          "type": "fx_streaks",
-          "content": "Garis cahaya fiber",
-          "trigger": "internet"
+          "type": "set",
+          "content": "Ruang data center 3D: lorong rak server, pendingin dengan udara dingin, tray kabel dengan paket data",
+          "trigger": "data center"
         }
       ],
       "sfx": [
@@ -603,23 +571,55 @@
           "whoosh_label"
         ],
         [
+          "data center",
+          "rise_hum"
+        ],
+        [
           "ribuan",
           "multiply_swell"
         ],
         [
           "pendingin",
-          "pop"
-        ],
-        [
-          "listrik",
-          "pop"
+          "whoosh"
         ],
         [
           "internet",
-          "pop"
+          "whoosh"
         ]
       ],
-      "rehook": true
+      "rehook": true,
+      "set": {
+        "name": "datacenter",
+        "at": "data center",
+        "fx": [
+          [
+            "pendingin",
+            "cold"
+          ],
+          [
+            "listrik",
+            "power"
+          ],
+          [
+            "internet",
+            "data"
+          ]
+        ],
+        "mark": [
+          [
+            "pendingin",
+            "pendingin",
+            "Pendingin",
+            "snowflake"
+          ],
+          [
+            "internet",
+            "jaringan",
+            "Internet super cepat",
+            "rocket"
+          ]
+        ]
+      }
     },
     {
       "id": "s6_hosting",
@@ -948,17 +948,7 @@
     "footer_icon": "globe",
     "props_from": {
       "scene": "s5_datacenter",
-      "word": "pendingin"
-    },
-    "background": {
-      "theme": "grape",
-      "pattern": "bokeh",
-      "motif": [
-        "globe",
-        "server",
-        "cloud",
-        "wifi"
-      ]
+      "word": "ribuan"
     },
     "host": {
       "pose": "point_up",
@@ -974,6 +964,16 @@
       "x": 800,
       "y": 820,
       "color": "#34D399"
+    },
+    "background": {
+      "theme": "tech_dark",
+      "pattern": "code",
+      "motif": [
+        "server",
+        "cpu",
+        "cloud",
+        "wifi"
+      ]
     }
   },
   "metaphor": {

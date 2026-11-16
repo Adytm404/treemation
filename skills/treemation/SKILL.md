@@ -9,8 +9,10 @@ This skill produces videos like the example in `examples/zenhosta/` ("Kok websit
 a pixel-skin host (blocky sandbox-game style character with a pixelated anime face) adapted to the
 user's context, the mascot "Byte", a camera that switches shots (face close-up, mascot close-up,
 3D illustration focus, wide, low angle), backgrounds whose theme follows the topic, a step label at
-the top with a progress bar, a floating 3D stage for props, UI panels that appear exactly when a
-word is spoken, big captions (keywords in yellow), and a host whose mouth follows the voice.
+the top with a progress bar, a floating 3D stage for props, **3D sets** (whole rooms/places — data
+center, office, warehouse, city, or your own — built behind the host, who floats in front of them,
+then the camera flies inside), UI panels that appear exactly when a word is spoken, big captions
+(keywords in yellow), and a host whose mouth follows the voice.
 
 All communication with the user is in **Bahasa Indonesia** (scripts, captions, and chat replies).
 
@@ -92,9 +94,18 @@ Folder contents when done: `plan.json` (you write it), `scenes.js` (you write it
    CTA, plus `thumbnail` (cover title, props to show, host expression) — see the "Thumbnail"
    section. Plan each scene's `shots` and `background` at the same time (sections "Shot kamera"
    and "Latar adaptif"). Aim for 120–150 words total (≈ 60–70 seconds in ElevenLabs).
+   If a step is about a **place** (server room, warehouse, office, street, classroom, factory…), read
+   `references/sets.md` and use `set` for that scene (1–2 sets per video): the host floats in front
+   of a 3D room, the camera moves into the `spot:` named in the narration, `mark` points at its
+   parts, `fx` brings it to life. A place that isn't among the built-in sets → build it with
+   `defineSet()` in `scenes.js` (Stage 2).
 5. Run `python <skill>/scripts/plan_timing.py <project>` → creates `video-plan.json` (estimated
-   timing) and `naskah-elevenlabs.txt`. Check the output: every trigger word must be found and it
-   must print **"Cek hook: OK"** — fix every ⚠ warning and run it again.
+   timing) and `naskah-elevenlabs.txt`. Check the output: every trigger word must be found, it must
+   print **"Cek hook: OK"**, and when sets are used **"Cek set 3D: OK"** — fix every ⚠ warning and
+   run it again. Optional for videos with sets: `plan_timing.py <project> --preview` also writes an
+   estimated `timeline.js`, so `render.py --stills` can check how the set looks before the MP3
+   exists (needs `scenes.js`; in Stage 1 a single line is enough:
+   `import { register } from './engine.js'; register({});`).
 6. Reply to the user in the Stage 1 format from `references/output-format.md`: ready-to-paste
    script block, pronunciation notes, scene table with minutes, and the `video-plan.json` path.
    Ask for the MP3.
@@ -113,12 +124,12 @@ Folder contents when done: `plan.json` (you write it), `scenes.js` (you write it
    lines marked `<-- cek` have suspicious durations,
    usually because the text differs from the audio or ElevenLabs paused somewhere unexpected.
    Fix the text in the plan if needed and run it again.
-4. Read `references/engine-api.md`, then write `<project>/scenes.js`. Start by copying the
+4. Read `references/engine-api.md` (and `references/sets.md` if the plan uses `set`), then write `<project>/scenes.js`. Start by copying the
    patterns in `examples/zenhosta/scenes.js`. All times use `T(sceneId, 'word')`, never raw
    seconds — so everything stays in sync if the audio is replaced.
 5. **Visual check before the full render**:
    `python <skill>/scripts/render.py <project> --stills <3–4 seconds per scene>`
-   then **look** at the images in `<project>/previews/`. Take at least one still per shot. Check:
+   then **look** at the images in `<project>/previews/`. Take at least one still per shot (for sets: one per `spot:` and one while the set is being built). Check:
    panels don't cover the host's face, nothing is cut off at the edges, captions are readable,
    props appear on the stage, no page errors. Fix and repeat until clean. This is the most
    important step for quality.
@@ -169,6 +180,10 @@ Folder contents when done: `plan.json` (you write it), `scenes.js` (you write it
   vanish instantly (`hide`, for cuts) or slide straight out to the side before the camera moves
   (`slide`, for moves) — no turning around, no walking in front of the camera. For variety (only
   when needed) a character may pop in from below, the side, or above via `enter`.
+- **A place becomes a stage, not a backdrop.** When the narration talks about a place, build it as a
+  3D set behind the host (not a background image): the host floats in front of it explaining, then
+  the camera moves into the part being mentioned and back to the host. Single objects stay on the
+  floating island.
 - **One idea per moment.** The top area (y 230–900 px) holds one main thing at a time: a UI panel
   *or* a large 3D prop. Clear the previous scene's elements.
 - **Context-fitting yet original characters.** The pixel-skin host is built from a spec (preset +
@@ -198,17 +213,18 @@ Folder contents when done: `plan.json` (you write it), `scenes.js` (you write it
 
 - `scripts/setup_project.py` — set up a project.
 - `scripts/find_project.py` — list video projects + status (waiting for MP3 / ready to render / done).
-- `scripts/plan_timing.py` — Stage 1: estimated timing + ElevenLabs text.
+- `scripts/plan_timing.py` — Stage 1: estimated timing + ElevenLabs text (+ hook & set checks; `--preview` for stills before the MP3).
 - `scripts/align.py` — Stage 2: sync to the audio (ffmpeg + numpy, no AI model).
 - `scripts/render.py` — preview stills / render all frames (Playwright Chromium).
 - `scripts/encode.py` — sound effects, background music (file or `auto`) with ducking, mix, MP4.
 - `scripts/thumbnail.py` — TikTok/Reels cover + safe-area check image.
 - `scripts/preview_characters.py` — render all character presets, or the host from plan.json (full body + close-up).
 - `scripts/plan_lib.py` — shared by the other scripts.
-- `assets/engine/` — `index.html`, `engine.js`, `pixelchar.js` (don't edit per video; change things through `plan.json`/`scenes.js`).
+- `assets/engine/` — `index.html`, `engine.js`, `pixelchar.js`, `sets.js` (3D set library) — don't edit per video; change things through `plan.json`/`scenes.js`.
+- `references/sets.md` — 3D sets: when to use them, `set` in plan.json, spots/fx/markers of each built-in set, `set_*`/`spot:` shots, building your own set.
 - `references/karakter.md` — pixel-skin style, presets, spec fields, choosing from context.
 - `references/hook.md` — TikTok hook research: three layers, 10 hook types + examples, 0–8 s structure, don'ts.
-- `examples/zenhosta/` — complete `plan.json` + `scenes.js` for one 69-second video.
+- `examples/zenhosta/` — complete `plan.json` + `scenes.js` for one 69-second video (step 3 uses the `datacenter` set).
 - `references/naskah-dan-plan.md` — writing the script and `plan.json`.
 - `references/engine-api.md` — API for `scenes.js`, layout, components, props.
 - `references/output-format.md` — chat reply format for Stage 1 and Stage 2.

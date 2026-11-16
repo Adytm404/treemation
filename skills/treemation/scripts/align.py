@@ -13,7 +13,7 @@ Narasi di plan.json HARUS sama dengan teks yang dibacakan ElevenLabs.
 import sys, os, json, subprocess, wave, re
 import numpy as np
 sys.path.insert(0, os.path.dirname(__file__))
-from plan_lib import load_plan, tokenize, build_outputs, tc, visemes
+from plan_lib import load_plan, tokenize, build_outputs, tc, visemes, set_lint
 
 args_ = [a for a in sys.argv[1:] if not a.startswith("--")]
 WHISPER = next((a.split("=", 1)[1] if "=" in a else "small" for a in sys.argv[1:] if a.startswith("--whisper")), None)
@@ -196,7 +196,7 @@ for w_ in words:
         for f in range(int(round((w_["start"] + k_ * d) * fps)), min(frames, int(round((w_["start"] + (k_ + 1) * d) * fps)))):
             vis[f] = v_
 vis = "".join(v_ if mouth[f] >= .12 else "-" for f, v_ in enumerate(vis))
-tl = {"fps": fps, "total": total, "frames": frames, "visemes": vis, "render_style": plan.get("render_style", {}), "loop_end": plan.get("loop_end", False), "emphasis": emph, "auto_punch": plan.get("auto_punch", True), "character_exit": plan.get("character_exit", "slide"), "audio_length": round(AUDIO_LEN, 2), "characters": doc.get("characters", {}), "thumbnail": plan.get("thumbnail"), "hook": doc.get("hook"), "scenes": doc["scenes"], "captions": doc["captions"],
+tl = {"fps": fps, "total": total, "frames": frames, "visemes": vis, "render_style": plan.get("render_style", {}), "loop_end": plan.get("loop_end", False), "emphasis": emph, "auto_punch": plan.get("auto_punch", True), "character_exit": plan.get("character_exit", "slide"), "set_keep_stage": plan.get("set_keep_stage", False), "audio_length": round(AUDIO_LEN, 2), "characters": doc.get("characters", {}), "thumbnail": plan.get("thumbnail"), "hook": doc.get("hook"), "scenes": doc["scenes"], "captions": doc["captions"],
       "words": [{k: u[k] for k in ("spoken", "display", "start", "end", "scene")} for u in words], "mouth": mouth}
 json.dump(tl, open(os.path.join(proj, "timeline.json"), "w", encoding="utf-8"), ensure_ascii=False)
 open(os.path.join(proj, "timeline.js"), "w", encoding="utf-8").write("window.TL=" + json.dumps(tl, ensure_ascii=False) + ";")
@@ -211,3 +211,8 @@ for k, (si, us) in enumerate(phrases):
 print("Scene:")
 for s in doc["scenes"]:
     print(f"  {s['start_tc']}–{s['end_tc']}  {s['id']}")
+if any(s_.get("set") for s_ in plan["scenes"]):
+    _sw = set_lint(plan, doc)
+    print("Cek set 3D:", "OK" if not _sw else "")
+    for _x in _sw:
+        print("  ⚠", _x)

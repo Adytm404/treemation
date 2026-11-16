@@ -160,6 +160,19 @@ def build_outputs(plan, words, bounds, total, meta_extra, fps=30):
             b["start"] = F(at) if at else round(start, 2)
             b["start_tc"] = tc(b["start"])
             out["background"] = b
+        if sc.get("set"):
+            st = sc["set"] if isinstance(sc["set"], dict) else {"name": sc["set"]}
+            st = dict(st)
+            at, until = st.pop("at", None), st.pop("until", None)
+            st["start"] = round(max(start, F(at) - 0.3), 2) if at else round(start, 2)
+            st["end"] = F(until) if until else round(end, 2)
+            st["fx"] = [{"fx": f[1], "trigger_word": f[0], "start": round(start, 2) if f[0] == "@start" else F(f[0]),
+                         **({"end": F(f[2])} if len(f) > 2 and f[2] else {})} for f in st.get("fx", [])]
+            st["mark"] = [{"spot": m[1], "trigger_word": m[0], "start": round(start, 2) if m[0] == "@start" else F(m[0]),
+                           **({"label": m[2]} if len(m) > 2 and m[2] else {}), **({"icon": m[3]} if len(m) > 3 and m[3] else {}),
+                           **({"end": round(F(m[0]) + float(m[4]), 2)} if len(m) > 4 else {})} for m in st.get("mark", [])]
+            st["start_tc"], st["end_tc"] = tc(st["start"]), tc(st["end"])
+            out["set"] = st
         if sc.get("dashes_from"):
             out["dashes_from"] = sc["dashes_from"]
             out["dashes_from_t"] = F(sc["dashes_from"])
@@ -283,4 +296,68 @@ def hook_lint(plan, doc=None):
             warn.append('Pertimbangkan "loop_end": true — akhir video kembali ke komposisi frame pertama supaya ditonton ulang.')
         if len(sc) > 1 and sc[1]["start"] > 8.5:
             warn.append(f"Scene ke-2 baru mulai di {sc[1]['start']:.1f} dtk — janji hook harus mulai dibayar ≤ 8 dtk.")
+    return warn
+
+
+# ---------- SET 3D (references/sets.md) ----------
+SET_SPOTS = {
+    "datacenter": {"lorong", "rak", "pendingin", "listrik", "jaringan", "atas"},
+    "office": {"meja", "layar", "papan", "jendela", "atas"},
+    "warehouse": {"rak", "konveyor", "truk", "forklift", "atas"},
+    "city": {"jalan", "gedung", "toko", "persimpangan", "atas"},
+}
+SET_FX = {"datacenter": {"cold", "power", "data"}, "office": {"work", "write"},
+          "warehouse": {"ship", "lift", "open"}, "city": {"rush", "lights"}}
+
+
+def set_lint(plan, doc):
+    """Periksa pemakaian set 3D. Mengembalikan daftar peringatan."""
+    warn = []
+    wins = [(s["id"], s["set"]) for s in doc["scenes"] if s.get("set")]
+    shots = sorted(((k["start"], k["shot"], s["id"]) for s in doc["scenes"] for k in s.get("shots", [])), key=lambda x: x[0])
+
+    def active_set(t):
+        for sid, st in wins:
+            if st["start"] - .05 <= t < st["end"]:
+                return st
+        return None
+
+    def shot_at(t):
+        cur = None
+        for st, name, _ in shots:
+            if st <= t + 1e-6:
+                cur = name
+        return cur
+    for st, name, sid in shots:
+        if name.startswith("spot:"):
+            a = active_set(st + .01)
+            if not a:
+                warn.append(f'{sid}: shot "{name}" di {st:.1f} dtk tapi tidak ada set aktif — tambahkan "set" di scene itu atau ganti shot.')
+            elif a["name"] in SET_SPOTS and name[5:] not in SET_SPOTS[a["name"]]:
+                warn.append(f'{sid}: spot "{name[5:]}" tidak ada di set {a["name"]} (tersedia: {", ".join(sorted(SET_SPOTS[a["name"]]))}).')
+        elif name.startswith("set_") and not active_set(st + .01):
+            warn.append(f'{sid}: shot "{name}" dipakai di luar set — set_* hanya untuk saat set aktif.')
+    merged = []
+    for sid, st in wins:
+        if merged and merged[-1][1]["name"] == st["name"] and st["start"] - merged[-1][1]["end"] < .2:
+            merged[-1][1]["end"] = st["end"]
+            continue
+        merged.append((sid, dict(st)))
+        if st["name"] not in SET_SPOTS:
+            warn.append(f'{sid}: set "{st["name"]}" bukan bawaan — pastikan dibuat dengan defineSet() di scenes.js.')
+        for f in st.get("fx", []):
+            if st["name"] in SET_FX and f["fx"] not in SET_FX[st["name"]]:
+                warn.append(f'{sid}: fx "{f["fx"]}" tidak dikenal untuk set {st["name"]} (tersedia: {", ".join(sorted(SET_FX[st["name"]]))}).')
+        for m in st.get("mark", []):
+            if st["name"] in SET_SPOTS and m["spot"] not in SET_SPOTS[st["name"]]:
+                warn.append(f'{sid}: mark ke spot "{m["spot"]}" yang tidak ada di set {st["name"]}.')
+            cur = shot_at(m["start"] + .3) or ""
+            if cur.startswith("spot:") and cur[5:] != m["spot"] and m["spot"] != "atas":
+                warn.append(f'{sid}: mark "{m["spot"]}" di {m["start"]:.1f} dtk saat kamera di {cur} — panah kemungkinan tidak terlihat; samakan shot-nya atau pakai set_wide/atas.')
+    for sid, st in merged:
+        dur = st["end"] - st["start"]
+        if dur < 3:
+            warn.append(f'{sid}: set {st["name"]} hanya tampil {dur:.1f} dtk — terlalu singkat untuk dibangun & dijelajahi (≥ 4 dtk).')
+    if len(merged) > 2:
+        warn.append(f"{len(merged)} set berbeda dalam satu video — 1–2 set sudah cukup; sisanya pakai pulau melayang supaya tidak melelahkan.")
     return warn

@@ -21,7 +21,8 @@ Contoh lengkap yang bekerja: `examples/zenhosta/scenes.js`. Mulai dari menyalinn
 ```js
 import { register, T, S, hookEnd, loopStart, env, setPop, P, clamp, lerp, inOut, easeOut, backOut,
          M, box, grp, stage, PROPS, FXP, UI, ANIM, SHOTS, THEMES, SCREENS, smartphone, outline, glow,
-         screenOf, css, el, icon, textBoard, THREE } from './engine.js';
+         screenOf, css, el, icon, textBoard, THREE,
+         defineSet, getSet, setPoint } from './engine.js';   // tiga terakhir: set 3D (sets.md)
 
 let P3 = {}, U = {};
 register({
@@ -207,6 +208,19 @@ Dipanggil dari `scenes.js`:
 - Garis kecepatan pada efek suara `whoosh*`; debu kecil saat karakter mendarat (masuk dari
   atas/bawah, maskot `jump`).
 - `loop_end`: kamera & latar kembali ke frame pertama di `loopStart()`.
+
+## 6a2. Set 3D (ruangan utuh di belakang karakter)
+
+Diatur dari `set` di plan.json — lihat **`sets.md`** (skema, set bawaan, spot, fx, penanda, membuat set
+sendiri). Engine otomatis: membangun/membongkar set, membuat karakter melayang (`FLOAT`), menyesuaikan
+tinggi shot karakter, menurunkan panggung, memudarkan grid & latar partikel, kabut/cahaya set, langit-langit
+hilang saat kamera di atasnya, panah + tag penanda. Dari `scenes.js`:
+- `defineSet(nama, (K, opts) => ({ g, spots, update, … }))` di `setup()` — set baru.
+- `getSet(nama)` → `{ handles, spots, fx, fxT }`; `setPoint(nama, spot, dy)` → posisi px untuk menempel UI.
+- `SHOTS['<set>.<spot>']` dibuat otomatis dari spot; `spot:<spot>` di plan memakai set yang aktif.
+- Zona aman UI: `set_wide` seperti `wide_far` (kepala host y ±1000+); `set_host` seperti `host_medium`;
+  `spot:` seperti `illustration` (pita y 230–420 atau tempel ke spot).
+- Urutan di `register`: `setup()` (boleh `defineSet` & `SHOTS.x = …`) → set dibangun → shot dihitung.
 
 ## 6b. Latar adaptif
 

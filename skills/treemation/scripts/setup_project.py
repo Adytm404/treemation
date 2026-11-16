@@ -10,7 +10,7 @@ import sys, os, shutil, subprocess, json, glob
 SKILL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 proj = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else ".")
 os.makedirs(proj, exist_ok=True)
-for f in ("index.html", "engine.js", "pixelchar.js"):
+for f in ("index.html", "engine.js", "pixelchar.js", "sets.js"):
     shutil.copy(os.path.join(SKILL, "assets", "engine", f), os.path.join(proj, f))
 pkg = {"name": "video-edukasi", "private": True, "dependencies": {
     "three": "0.160.0", "@fontsource/poppins": "5.0.8", "@fontsource/jetbrains-mono": "5.0.18", "lucide-static": "0.400.0"}}

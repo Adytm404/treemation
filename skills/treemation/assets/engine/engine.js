@@ -2,6 +2,7 @@
 // Jangan diedit per video. Semua isi video ditulis di scenes.js (lihat references/engine-api.md).
 import * as THREE from 'three';
 import { buildPixelHost, pixelSkin, pixelate, PIXEL_PRESETS } from './pixelchar.js';
+import { makeKit, SET_LIBRARY } from './sets.js';
 export { THREE, PIXEL_PRESETS };
 export const TL = window.TL, W = 1080, H = 1920, FPS = TL.fps;
 
@@ -73,7 +74,13 @@ export const SHOTS = {
   illustration: { pos: [.55, 12.4, 12.6], look: [.55, 10.2, -3],  fov: 38, hideChars: true },   // fokus props; karakter minggir dulu ke luar bingkai
   low_angle:    { pos: [0, 3.6, 18.5],    look: [0, 7.3, 0],      fov: 40 },
   thumb:        { pos: [.2, 8.6, 21],     look: [.2, 8.1, 0],     fov: 36 },   // khusus thumbnail   // dari bawah, kesan heroik
+  // --- shot khusus SET (ruangan 3D di belakang karakter); set:true = tidak dikompensasi tinggi melayang ---
+  set_wide:     { pos: [0, 10.5, 40],     look: [0, 9.2, -14],    fov: 40, set: true },  // karakter kecil di bawah, ruangan luas di belakang
+  set_host:     { pos: [-.9, 8.3, 14],    look: [-1.2, 7.9, -10], fov: 40, set: true },  // host setengah badan, ruangan di kanan-belakang
+  set_low:      { pos: [.6, 2.6, 16],     look: [0, 8.6, -14],    fov: 48, set: true },  // dari bawah, ruangan menjulang
 };
+/** tinggi karakter melayang saat set aktif (unit dunia) */
+export const FLOAT = { y: 1.05, bob: .16 };
 export const SHOT_MOVE = .7;   // durasi default transisi 'move' (detik)
 scene.add(new THREE.HemisphereLight(0xd4dcff, 0x26307a, 2.1));
 const key = new THREE.DirectionalLight(0xffffff, 2.6); key.position.set(-7, 15, 13); key.castShadow = true;
@@ -558,6 +565,8 @@ function buildKeys() {
 function buildShots() {
   const K = [];
   for (const s of TL.scenes) for (const k of s.shots || []) {
+    if (/^spot:/.test(k.shot)) { const w = setWindowAt(k.start + .01) || setWindowAt(k.start + .6); const nm = k.shot.slice(5);
+      k.shot = w ? `${w.name}.${nm}` : k.shot; if (!w) console.warn(`shot ${k.shot}: tidak ada set aktif di ${k.start} dtk`); }
     if (!SHOTS[k.shot]) console.warn('shot tidak dikenal: ' + k.shot);
     const [kind, dur] = (k.transition || 'cut').split(':');
     K.push({ t: k.start, shot: k.shot, kind, dur: dur ? +dur : SHOT_MOVE, chars: k.chars || null });
@@ -633,9 +642,9 @@ export function outline(root, thick = .045) {
 }
 let GLOW_TEX = null;
 /** halo bercahaya (sprite aditif) di benda yang menyala (material basic) */
-export function glow(root, size = 2.6, opacity = .55) {
+export function glow(root, size = 2.6, opacity = .55, onlyTagged = false) {
   if (!GLOW_TEX) GLOW_TEX = canvasTex(64, 64, (c, w, h) => { const g = c.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.35, 'rgba(255,255,255,.35)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(0, 0, w, h); });
-  const list = []; root.traverse(o => { if (o.isMesh && o.material?.isMeshBasicMaterial && o.material.color && !o.userData.noGlow && o.geometry?.type === 'BoxGeometry') list.push(o); });
+  const list = []; root.traverse(o => { if (o.isMesh && o.material?.isMeshBasicMaterial && o.material !== OUTLINE_MAT && !o.userData.noOutline && o.material.color && !o.userData.noGlow && o.geometry?.type === 'BoxGeometry' && (!onlyTagged || o.userData.glow)) list.push(o); });
   for (const o of list) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW_TEX, color: o.material.color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false }));
     o.getWorldScale(_ws); const base = Math.max(.3, Math.max(o.geometry.parameters.width * _ws.x, o.geometry.parameters.height * _ws.y)); sp.scale.set(size * base / Math.max(.001, _ws.x), size * base / Math.max(.001, _ws.y), 1); sp.userData.noGlow = true; o.add(sp); }
 }
@@ -687,6 +696,121 @@ function pose(name, lt) { const base = { Lz: -.1, Lx: 0, Rz: .1, Rx: 0, Le: -.15
 /** antisipasi (mundur sedikit) lalu lewat sasaran dan kembali */
 const antic = x => x <= 0 ? 0 : x < .18 ? -.07 * Math.sin(Math.PI * x / .18) : backOut(clamp((x - .18) / .82));
 
+
+/* ---------- SET: lingkungan 3D penuh di belakang karakter (lihat references/sets.md) ----------
+ * plan.json scene.set → TL.scenes[].set = { name, start, end, in, out, float, fx:[{fx,start,end}], mark:[{spot,start,end,label,icon}] }
+ * Jendela berurutan dengan nama sama digabung (tidak dibangun ulang). Karakter melayang selama set aktif. */
+export const SETS = { ...SET_LIBRARY };
+/** daftarkan set buatan sendiri (panggil di setup()): defineSet('kelas', (K, opts) => ({ g, spots, update })) — pola di sets.js */
+export function defineSet(name, builder) { SETS[name] = builder; }
+const SET_INST = {}; let SET_WIN = [], SET_KEEP_STAGE = false;
+const SET_BUILD = 1.5, SET_OUT = .6;
+const HEMI0 = { sky: hemi.color.clone(), ground: null, i: hemi.intensity };
+export const getSet = name => SET_INST[name];
+function setWindowAt(t) { for (const w of SET_WIN) if (t >= w.start && t < w.end) return w; return null; }
+function buildSetWindows() {
+  const W_ = [];
+  for (const s of TL.scenes) { const st = s.set; if (!st || !st.name || st.name === 'none') continue;
+    W_.push({ name: st.name, start: st.start, end: st.end, in: st.in || 'build', out: st.out || 'build', float: st.float !== false, opts: st.options || {},
+      fx: (st.fx || []).map(f => ({ ...f })), mark: (st.mark || []).map(m => ({ ...m })) }); }
+  W_.sort((a, b) => a.start - b.start);
+  const M_ = [];
+  for (const w of W_) { const p = M_[M_.length - 1];
+    if (p && p.name === w.name && w.start - p.end < .2) { p.end = Math.max(p.end, w.end); p.out = w.out; p.fx.push(...w.fx); p.mark.push(...w.mark); }
+    else M_.push(w); }
+  for (const w of M_) { for (const f of w.fx) f.end = Math.min(f.end ?? w.end, w.end); for (const m of w.mark) m.end = Math.min(m.end ?? m.start + 2.6, w.end); }
+  return M_;
+}
+function buildSets() {
+  SET_WIN = buildSetWindows(); if (!SET_WIN.length) return;
+  HEMI0.ground = hemi.groundColor.clone();
+  const kit = makeKit({ THREE, box, grp, M, canvasTex, textBoard, rng });
+  for (const w of SET_WIN) {
+    if (SET_INST[w.name]) continue;
+    const b = SETS[w.name]; if (!b) { console.warn('set tidak dikenal: ' + w.name + ' (tersedia: ' + Object.keys(SETS).join(', ') + ')'); continue; }
+    kit.parts = [];
+    const inst = b(kit, w.opts); inst.parts = kit.parts; inst.name = w.name; inst.fx = {}; inst.fxT = {};
+    scene.add(inst.g); inst.g.visible = false;
+    inst.g.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = true; } });
+    if (RS().outline) outline(inst.g, .05);
+    if (RS().glow) glow(inst.g, 2.4, .45, true);   // di set: hanya objek bertanda userData.glow (hemat render)
+    const _bb = new THREE.Box3();
+    for (const p of inst.parts) { p.base = { p: p.o.position.clone(), s: p.o.scale.clone(), v: p.o.visible }; _bb.setFromObject(p.o); p.h = Math.max(1, _bb.max.y - _bb.min.y); }
+    for (const [k, sp] of Object.entries(inst.spots || {})) SHOTS[`${w.name}.${k}`] = { pos: sp.pos, look: sp.look, fov: sp.fov || 46, hideChars: sp.chars !== true, set: true };
+    SET_INST[w.name] = inst;
+  }
+  SET_KEEP_STAGE = !!TL.set_keep_stage;
+  // penanda (panah + tag) — dibuat sekali, dipakai ulang
+  MARK.g = grp(scene); const a = MARK.g; box(a, .7, 1.5, .7, '#FFD60A', 0, 2.05, 0); [[2.0, .95], [1.45, .65], [.9, .35], [.4, .08]].forEach(([w, y]) => box(a, w, .32, w * .6, '#FFD60A', 0, y, 0));   // panah ke bawah, ujung di y=0
+  outline(MARK.g); MARK.g.visible = false;
+}
+const MARK = { g: null, tags: {} };
+/** kehadiran set 0..1 (untuk melayang, latar, kamera) */
+function floatAt(t) { let v = 0; for (const w of SET_WIN) { if (!SET_INST[w.name] || !w.float) continue;
+  const a = w.in === 'cut' ? (t >= w.start ? 1 : 0) : inOut(P(t, w.start, .7)), b = w.out === 'cut' ? (t < w.end ? 1 : 0) : 1 - inOut(P(t, w.end, .55)); v = Math.max(v, Math.min(a, b)); } return v; }
+function presenceAt(t) { let v = 0; for (const w of SET_WIN) { if (!SET_INST[w.name]) continue;
+  const a = w.in === 'cut' ? (t >= w.start ? 1 : 0) : easeOut(P(t, w.start, .5)), b = w.out === 'cut' ? (t < w.end ? 1 : 0) : 1 - P(t, w.end, SET_OUT); v = Math.max(v, Math.min(a, b)); } return v; }
+function floatCam(t, cam) { const sh = SHOTS[cam.shot] || {}; if (sh.set) return; const f = floatAt(t) * FLOAT.y; cam.y += f; cam.ly += f; }
+const _sp = new THREE.Vector3();
+function updateSets(t, FW) {
+  if (!SET_WIN.length) return;
+  const vis = {};
+  for (const w of SET_WIN) { const inst = SET_INST[w.name]; if (!inst) continue;
+    if (t < w.start - .01 || t > w.end + (w.out === 'cut' ? 0 : SET_OUT)) continue;
+    if (w.out === 'cut' && t >= w.end) continue;
+    vis[w.name] = w; }
+  for (const [name, inst] of Object.entries(SET_INST)) {
+    const w = vis[name]; inst.g.visible = !!w; if (!w) continue;
+    for (const p of inst.parts) { p.o.position.copy(p.base.p); p.o.scale.copy(p.base.s); p.o.visible = p.base.v; }
+    const fx = {}, fxT = {}; for (const f of w.fx) if (t >= f.start && t < f.end) { fx[f.fx] = true; fxT[f.fx] = f.start; }
+    Object.assign(inst.fx, fx); for (const k in inst.fx) if (!fx[k]) delete inst.fx[k]; inst.fxT = fxT;
+    const uin = w.in === 'cut' ? 1e9 : (t - w.start) / SET_BUILD, uout = w.out === 'cut' ? -1 : (t - w.end) / SET_OUT;
+    inst.update?.(t, { w: FW, fx, fxT, cam: camera });
+    for (const p of inst.parts) {
+      let k = backOut(clamp((uin - p.d * .62) / .38)); if (uin < p.d * .62) k = 0;
+      if (uout > 0) k = Math.min(k, 1 - easeOut(clamp((uout - (1 - p.d) * .35) / .65)));
+      if (k >= .999 && k <= 1.001) continue;
+      if (k <= .002) { p.o.visible = false; continue; }
+      if (p.mode === 'pop') p.o.scale.multiplyScalar(k);
+      else if (p.mode === 'grow') { p.o.scale.y *= k; p.o.position.y *= k; }
+      else if (p.mode === 'rise') p.o.position.y -= (1 - Math.min(1, k)) * p.h * 1.02;
+      else if (p.mode === 'drop') { p.o.position.y += (1 - Math.min(1, k)) * 7; }
+    }
+    // langit-langit hilang saat kamera di atasnya (tampilan "rumah boneka")
+    if (inst.ceilingY != null) { const above = camera.position.y > inst.ceilingY - .4; for (const c of inst.ceiling || []) if (above) c.visible = false; }
+  }
+  // kabut, cahaya, lantai engine, latar HTML
+  const pr = presenceAt(t), cur = Object.values(vis)[0], inst = cur && SET_INST[cur.name];
+  if (inst && pr > 0) {
+    const fg = inst.fog; if (fg) { scene.fog.color.lerp(_c2.set(fg.color), pr); }
+    scene.fog.near = lerp(30, fg?.near ?? 45, pr); scene.fog.far = lerp(64, fg?.far ?? 130, pr);
+    const hm = inst.hemi; if (hm) { hemi.color.copy(HEMI0.sky).lerp(_c1.set(hm.sky), pr); hemi.groundColor.lerp(_c2.set(hm.ground), pr); hemi.intensity = lerp(HEMI0.i, hm.intensity ?? HEMI0.i, pr); }
+  } else { scene.fog.near = 30; scene.fog.far = 64; hemi.color.copy(HEMI0.sky); hemi.intensity = HEMI0.i; }
+  grid.visible = pr < .5; floor.visible = pr < .5;
+  for (const id of ['bokeh', 'pattern', 'motif']) $(id).style.opacity = 1 - pr;
+  // penanda: panah memantul + cincin di titik spot
+  let mk = null; if (cur) for (const m of cur.mark) if (t >= m.start - .05 && t < m.end) mk = m;
+  const sp = mk && inst?.spots?.[mk.spot];
+  if (MARK.g) { MARK.g.visible = !!sp;
+    if (sp) { const k = Math.min(backOut(P(t, mk.start, .35)), easeOut(clamp((mk.end - t) / .25))); const [x, y, z] = sp.mark || sp.look;
+      MARK.g.position.set(x, y + .2 + Math.abs(Math.sin((t - mk.start) * 4.2)) * .5, z); MARK.g.scale.setScalar(Math.max(.001, k) * (sp.markScale || 1)); MARK.g.rotation.y = Math.sin(t * 1.6) * .5;
+    } }
+  MARK.cur = sp ? { mk, sp } : null;
+}
+function updateMarkTags(t) {
+  for (const k in MARK.tags) MARK.tags[k].style.display = 'none';
+  const c = MARK.cur; if (!c || !c.mk.label) return;
+  const key = c.mk.label + (c.mk.icon || ''); let tg = MARK.tags[key];
+  if (!tg) { tg = el(`<div class="tag"><span data-icon="${c.mk.icon || 'map-pin'}"></span>${c.mk.label}</div>`, {}); MARK.tags[key] = tg; }
+  const [x, y, z] = c.sp.mark || c.sp.look; _sp.set(x, y + 3.2, z).project(camera); if (_sp.z > 1) return;
+  let px = (_sp.x + 1) / 2 * W, py = (1 - _sp.y) / 2 * H - 90; const wdt = tg.offsetWidth || 300;
+  if (py < 230) { _sp.set(x, y, z).project(camera); py = (1 - _sp.y) / 2 * H + 40; }   // tidak muat di atas panah → taruh di bawah ujung panah
+  px = clamp(px - wdt / 2, 60, W - 60 - wdt); py = clamp(py, 230, 1180);
+  tg.style.left = px + 'px'; tg.style.top = py + 'px'; setPop(tg, env(t, c.mk.start + .1, c.mk.end, .3, .25));
+}
+/** posisi layar (px) dari spot set: setPoint('datacenter', 'pendingin') → [x, y] (null kalau di belakang kamera) */
+export function setPoint(name, spot, dy = 0) { const sp = SET_INST[name]?.spots?.[spot]; if (!sp) return null; const [x, y, z] = sp.mark || sp.look; _sp.set(x, y + dy, z).project(camera); return _sp.z > 1 ? null : [(_sp.x + 1) / 2 * W, (1 - _sp.y) / 2 * H]; }
+
 /* ---------- register + frame loop ---------- */
 let DEF = null, HK = [], MK = [], KS = [], BG = [], THUMB_BG = null, HOOK_Y = 300, EN = [];
 /** waktu acuan props untuk thumbnail: thumbnail.props_from = {scene, word} atau {time} */
@@ -711,8 +835,10 @@ export function register(def) {
   const mascotSpec = { ...DEFAULT_LOOK.mascot, pixel: hostSpec.style === 'pixel', ...(TL.characters?.mascot?.spec || {}), ...(def.look?.mascot || {}) };
   if (hostSpec.style === 'classic') buildHost({ ...DEFAULT_LOOK.classic, ...hostSpec }); else buildPixel(hostSpec);
   buildMascot(mascotSpec);
-  [HK, MK] = buildKeys(); KS = buildShots(); EN = buildEnters(); buildAccents(KS);
+  [HK, MK] = buildKeys(); EN = buildEnters();
   def.setup?.();
+  buildSets();
+  KS = buildShots(); buildAccents(KS);
   if (RS().outline) { outline(host.root); outline(mascot.root); outline(stage); }
   if (RS().glow) { glow(mascot.root, 3); glow(stage, 2.6); }
   if (TL.loop_end && KS.length) { const t0 = loopStart(); KS.push({ t: t0, shot: KS[0].shot, kind: 'move', dur: .6, chars: null }); }
@@ -759,8 +885,8 @@ window.renderFrame = (frame) => {
   const mouth = TH ? (TH.host?.mouth ?? .55) : (TL.mouth[Math.min(frame, TL.mouth.length - 1)] || 0);
   // camera (shot dari timeline; DEF.camera boleh menggeser lebih lanjut)
   let cam;
-  if (TH) { const sh = SHOTS[TH.shot || 'thumb']; cam = { x: sh.pos[0], y: sh.pos[1], z: sh.pos[2], lx: sh.look[0], ly: sh.look[1], lz: sh.look[2], fov: sh.fov, shot: 'thumb' }; }
-  else { cam = cameraAt(t, KS); accentCam(t, cam); DEF.camera?.(t, sid, cam); }
+  if (TH) { const sh = SHOTS[TH.shot || 'thumb']; cam = { x: sh.pos[0], y: sh.pos[1], z: sh.pos[2], lx: sh.look[0], ly: sh.look[1], lz: sh.look[2], fov: sh.fov, shot: TH.shot || 'thumb' }; floatCam(t, cam); }
+  else { cam = cameraAt(t, KS); floatCam(t, cam); accentCam(t, cam); DEF.camera?.(t, sid, cam); }
   camera.fov = cam.fov; camera.updateProjectionMatrix();
   camera.position.set(cam.x, cam.y, cam.z); camera.lookAt(cam.lx, cam.ly, cam.lz);
   window.__shot = cam.shot;
@@ -768,8 +894,10 @@ window.renderFrame = (frame) => {
   drawBackground(t, BG, cam, TH ? THUMB_BG : null); bgBlur(cam);
   // karakter minggir untuk shot ilustrasi
   const AS = TH ? { k: 0, mode: 'slide' } : asideAt(t, KS), aside = AS.k, sliding = Math.sin(Math.PI * aside);
-  const hiddenChars = AS.mode === 'hide' && aside > .5;
+  const hiddenChars = (AS.mode === 'hide' && aside > .5) || aside >= .999;   // sudah di luar bingkai → sembunyikan (aman untuk shot di dalam set)
   const enH = TH ? { x: 0, y: 0 } : enterOffset(t, 'host', EN), enM = TH ? { x: 0, y: 0 } : enterOffset(t, 'mascot', EN);
+  // melayang saat set aktif
+  const FW = floatAt(t), flH = FW * (FLOAT.y + Math.sin(t * 1.7) * FLOAT.bob), flM = FW * (FLOAT.y * .85 + Math.sin(t * 1.7 + 1.3) * FLOAT.bob);
   // host
   const HKu = TH ? [[t - .6, TH.host?.pose || 'point_up', TH.host?.expression || 'wow']] : HK;
   const MKu = TH ? [[t - Math.PI / 8.8, TH.mascot?.action || 'jump', TH.mascot?.eyes || 'happy']] : MK;
@@ -779,14 +907,15 @@ window.renderFrame = (frame) => {
     const br = Math.sin(t * 2.2) * .03;
     host.arms.L.rotation.set(p.Lx, 0, p.Lz + br); host.arms.R.rotation.set(p.Rx, 0, p.Rz - br);
     if (host.elbows) { host.elbows.L.rotation.set(p.Le, 0, p.Lez); host.elbows.R.rotation.set(p.Re, 0, p.Rez); host.wrists.L.rotation.set(0, 0, p.Lw); host.wrists.R.rotation.set(0, 0, p.Rw); }
-    host.legs.forEach(l => l.rotation.x = 0);
+    host.legs.forEach((l, j) => l.rotation.x = FW * (j ? .22 : -.08) * (1 + Math.sin(t * 1.7 + j) * .4));
     // squash & stretch kecil di awal gestur baru
     const sq = i === 0 || TH ? 0 : bump(t - k[0], .08, .3);
     host.body.scale.set(1 + sq * .025, 1 - sq * .04, 1 + sq * .025);
     host.body.position.y = host.bodyY + br * .6 + p.body; host.body.rotation.z = Math.sin(t * .8) * .015 + sliding * .06;
     // geser lurus ke kiri (menghadap kamera terus) atau hilang; plus efek muncul tiba-tiba
     host.root.visible = !hiddenChars;
-    host.root.position.set(-1.75 - (AS.mode === 'slide' ? inOut(aside) * 6.5 : 0) + enH.x, enH.y, .6); host.root.rotation.y = .2;
+    host.root.position.set(-1.75 - (AS.mode === 'slide' ? inOut(aside) * 6.5 : 0) + enH.x, enH.y + flH, .6); host.root.rotation.y = .2;
+    host.root.rotation.x = FW * (.05 + Math.sin(t * 1.7 + .6) * .02);
     const nod = TH ? 0 : nodAt(t);
     host.head.rotation.set(-mouth * .07 + Math.sin(t * 1.3) * .03 + nod * .16, Math.sin(t * .6) * .08, p.tilt * .5 + e.tilt * .3 + Math.sin(t * .9) * .02);
     host.body.position.y -= nod * .05;
@@ -813,7 +942,7 @@ window.renderFrame = (frame) => {
       default: rz = Math.sin(t * 1.1) * .03;
     }
     mascot.root.visible = !hiddenChars;
-    mascot.root.position.set(x + (AS.mode === 'slide' ? inOut(aside) * 5.5 : 0) + enM.x, y + enM.y, 1.4); mascot.root.rotation.set(0, ry, rz - sliding * .08); mascot.body.scale.set(1 + (1 - sq) * .6, sq, 1 + (1 - sq) * .6);
+    mascot.root.position.set(x + (AS.mode === 'slide' ? inOut(aside) * 5.5 : 0) + enM.x, y + enM.y + flM, 1.4); mascot.root.rotation.set(0, ry, rz - sliding * .08); mascot.body.scale.set(1 + (1 - sq) * .6, sq, 1 + (1 - sq) * .6);
     if (k[1] !== 'nod') mascot.body.rotation.x = 0;
     const carry = k[1] === 'carry_coin' || k[1] === 'carry_phone';
     mascot.hands.forEach((h, j) => h.rotation.z = carry ? (j ? -2.7 : 2.7) : (k[1] === 'point' && j === 0) ? -2.1 + Math.sin(t * 3) * .08 : (j ? -1 : 1) * (k[1] === 'jump' || k[1] === 'bounce' ? .5 + Math.sin(t * 8) * .3 : .05));
@@ -825,10 +954,12 @@ window.renderFrame = (frame) => {
     mascot.leds.forEach((l, j) => l.visible = Math.sin(t * 3.4 + j * 1.7) > -.6); }
   // stage
   let st = 0; for (const [a, b] of (DEF.stageWindows?.() || [])) if (t >= a && t <= b) st = Math.min(easeOut(P(t, a, .5)), easeOut(clamp((b - t) / .35)));
-  if (TH) st = 1;
+  if (TH) st = (TH.stage_in_set || FW < .5) ? 1 : 0;
+  if (!SET_KEEP_STAGE && !(TH && TH.stage_in_set)) st *= 1 - FW;
   stage.visible = st > .001; stage.position.y = STAGE.y + Math.sin(t * 1.4) * .12 - (1 - st) * 1.2; stage.scale.setScalar(Math.max(.001, lerp(.3, 1, st)) * STAGE.scale);
   if (TH) { const so = { x: 2.2, y: 6.8, z: -3.2, scale: .85, ...(TH.stage || {}) }; stage.position.set(so.x, so.y, so.z); stage.scale.setScalar(so.scale * STAGE.scale); }
   DEF.update3D?.(t, sid);
+  updateSets(t, FW);
   if (!TH) updateDust(t); else DUST.forEach(d => d.m.visible = false);
   if (TH) { stage.scale.setScalar((TH.stage?.scale ?? .85) * STAGE.scale); stage.position.set(TH.stage?.x ?? 2.2, TH.stage?.y ?? 6.8, TH.stage?.z ?? -3.2); }
   renderer.render(scene, camera);
@@ -856,6 +987,7 @@ window.renderFrame = (frame) => {
         return `<span class="w" style="color:${col};transform:scale(${sc.toFixed(3)})">${w.display}${i === ws.length - 1 ? tail : ''}</span>`; }).join(' ');
       const k = P(t, cap.start - .02, .14); e.style.opacity = 1; e.style.transform = `scale(${lerp(.78, 1, backOut(k))})`; e.style.fontSize = cap.text.length > 18 ? '84px' : '104px'; } }
   DEF.updateHTML?.(t, sid);
+  updateMarkTags(t);
   updateConfetti(t, DEF.confetti?.() || []);
   updateSparks(t, DEF.sparkles?.() || []);
   if (!TH) updateSpeed(t);

@@ -11,9 +11,6 @@ register({
     P3.globe = PROPS.globe(stage, { x: .9 });
     P3.house = PROPS.house(stage, { sign: 'zenhosta.com' });
     P3.rack = PROPS.rack(stage);
-    P3.dc = PROPS.dataCenter(stage);
-    P3.snow = FXP.snow(stage);
-    P3.streaks = FXP.streaks(stage);
     P3.nums = FXP.orbitTexts(['203', '0', '113', '10', '198.51', '192', '172.16', '8.8', '104', '66']);
     P3.slotMat = M('#FFD60A', true);
     // ---- UI ----
@@ -27,8 +24,6 @@ register({
     U.badge = UI.badge({ big: '24/7', small: 'selalu menyala', icon: 'clock' }, { left: '90px', top: '262px' });
     U.sun = UI.bubble({ icon: 'sun', bg: '#FFD60A', fg: '#7a4b00' }, { left: '760px', top: '270px' });
     U.moon = UI.bubble({ icon: 'moon', bg: '#c7d2fe', fg: '#1e2a78' }, { left: '760px', top: '270px' });
-    U.chips = [['Pendingin', 'snowflake', '#7DD3FC'], ['Listrik cadangan', 'zap', '#FFD60A'], ['Internet super cepat', 'rocket', '#FF6FAE']]
-      .map(([text, icon, color], i) => UI.chip({ text, icon, color }, { left: '60px', top: (250 + i * 112) + 'px' }));
     U.tag = UI.tag({ text: 'Tempat kamu', icon: 'key-round' });
     U.buy = UI.note({ title: 'Beli server sendiri', sub: 'mahal &amp; ribet' }, { left: '60px', top: '240px', width: '520px' });
     U.strike = UI.strike({ left: '44px', top: '296px', width: '540px' });
@@ -38,7 +33,7 @@ register({
     U.cta = UI.cta({ q: 'Hosting untuk website kamu', brand: 'zenhosta', accent: '.com', button: 'Mulai hosting' }, { left: '90px', top: '300px', width: '900px' });
   },
   // kapan panggung 3D terlihat
-  stageWindows: () => [[T('s1_hook', 'dari') - .25, s1.end + .05], [T('s3_domain', 'alamat') - .3, T('s3_domain', 'Tanpa') + .2], [s4.start + .15, s6.end + .05]],
+  stageWindows: () => [[T('s1_hook', 'dari') - .25, s1.end + .05], [T('s3_domain', 'alamat') - .3, T('s3_domain', 'Tanpa') + .2], [s4.start + .15, s4.end + .05], [s6.start - .1, s6.end + .05]],
   confetti: () => [[T('s6_hosting', 'online'), 540, 640, s6.end], [T('s8_cta', 'sekarang'), 540, 700, loopStart()]],
 
   update3D(t, sid) {
@@ -47,29 +42,15 @@ register({
     { const t0 = T('s1_hook', 'dari'); P3.globe.dots.forEach((c, i) => { const k = P(t, t0 + .1 + i * .09, .2); c.visible = k > 0; c.scale.setScalar(.18 * backOut(k) + .001); }); }
     // house
     P3.house.g.visible = sid === 's3_domain'; if (P3.house.g.visible) P3.house.g.scale.setScalar(.9 * Math.max(.001, backOut(P(t, T('s3_domain', 'alamat') - .1, .5))));
-    // rack <-> data center
-    const tMult = T('s5_datacenter', 'ribuan'), tBack = s6.start + .1;
-    const rackOn = t >= s4.start && t < s7.start;
-    P3.rack.g.visible = rackOn && !(t > tMult + .5 && t < tBack + .3);
+    // rak server di panggung (s4 & s6); s5 memakai SET datacenter dari plan.json (panggung otomatis turun)
+    const rackOn = sid === 's4_server' || sid === 's6_hosting';
+    P3.rack.g.visible = rackOn;
     if (rackOn) {
-      let rs = easeOut(P(t, T('s4_server', 'server') - .1, .7));
-      if (t > tMult - .1 && t < tBack + .6) rs = Math.max(1 - easeOut(P(t, tMult - .1, .5)), easeOut(P(t, tBack, .6)));
-      P3.rack.g.scale.set(1, Math.max(.001, rs), 1);
+      P3.rack.g.scale.set(1, Math.max(.001, easeOut(P(t, sid === 's4_server' ? T('s4_server', 'server') - .1 : s6.start, .7))), 1);
       P3.rack.leds.forEach((l, j) => l.visible = Math.sin(t * 2.6 + j * 1.3) > -.3);
       P3.rack.slots.forEach(s => s.material = M('#374151'));
       if (sid === 's6_hosting' && t > T('s6_hosting', 'sewa') - .1) P3.rack.slots[3].material = Math.sin(t * 5) > -.2 ? P3.slotMat : M('#fbbf24');
     }
-    const dc = P3.dc; dc.g.visible = t > tMult - .2 && t < tBack + .4;
-    if (dc.g.visible) {
-      const k = Math.min(easeOut(P(t, tMult - .2, .6)), easeOut(clamp((tBack + .4 - t) / .5)));
-      dc.floorB.scale.set(6.2 * k + .001, .15, 4.6 * k + .001);
-      dc.walls.forEach((w, i) => { w.visible = k > .55; w.position.y = (i === 3 ? 3.3 : 1.6) - (1 - k) * 3; });
-      dc.racks.forEach((r, i) => { const kk = Math.min(easeOut(P(t, tMult + i * .045, .35)), easeOut(clamp((tBack + .4 - t) / .5))); r.g.scale.set(.42, .42 * Math.max(.001, kk), .42); r.leds.forEach((l, j) => l.visible = Math.sin(t * 2.4 + i + j * 1.3) > -.3); });
-      dc.ac.visible = k > .3; dc.battery.visible = t > T('s5_datacenter', 'listrik') && k > .3;
-      stage.scale.multiplyScalar(lerp(1, .86, k));
-    }
-    FXP.updateSnow(P3.snow, t, T('s5_datacenter', 'pendingin'), sid === 's5_datacenter' && t > T('s5_datacenter', 'pendingin'));
-    FXP.updateStreaks(P3.streaks, t, T('s5_datacenter', 'internet'), sid === 's5_datacenter' && t > T('s5_datacenter', 'internet'));
     FXP.updateOrbit(P3.nums, t, T('s3_domain', 'deretan'), s3.end);
   },
 
@@ -91,8 +72,7 @@ register({
       setPop(U.badge, env(t, T('s4_server', '24 jam') - .1, s4.end));
       const tk = T('s4_server', 'kapan'); const sm = env(t, tk - .15, s4.end); const ph = Math.floor((t - tk) / .5) % 2;
       setPop(U.sun, sm && ph <= 0 ? sm : null); setPop(U.moon, sm && ph === 1 ? sm : null); }
-    // s5
-    ['pendingin', 'listrik', 'internet'].forEach((w, i) => { const t0 = T('s5_datacenter', w) - .1; setPop(U.chips[i], env(t, t0, s5.end), '', `translateX(${(1 - easeOut(P(t, t0, .4))) * -80}px)`); });
+    // s5: tidak ada panel — set datacenter + penanda (mark) dari plan.json yang bercerita
     // s6
     { const tag = env(t, T('s6_hosting', 'sewa') - .05, s6.end);
       if (tag) { const [x, y] = screenOf(P3.rack.g, [-1.0, .45 + 3 * .52, .9]); U.tag.style.left = (x - 330) + 'px'; U.tag.style.top = (y - 36) + 'px'; } setPop(U.tag, tag);
